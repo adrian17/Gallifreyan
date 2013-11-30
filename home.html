@@ -1,0 +1,42 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+  <head>
+
+    <title>Gallifreyan translator</title>
+	
+	<link href="style.css" rel="stylesheet">
+
+  </head>
+
+  <body>
+	<div id="textfield-container">
+		<h3>A (incomplete) Gallifreyan translator</h3>
+		<input></input>
+		<button type="button" onclick="updateText(); return false;">Update</button>
+	</div>
+	<div id="canvas-container">
+		<canvas id="canvas" width="500" height="500">Your browser doesn't support canvas</canvas>
+	</div>
+	<script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
+	<script src="jquery-mousewheel/jquery.mousewheel.js"></script>
+	<script src="gallifreyan.js"></script>
+
+	<p>Want to help? Make a pull request on <a href="https://github.com/adrian17/Gallifreyan">GitHub</a></p>
+	<p style="font-size:10px">Created by Adrian Wielgosik</p>
+
+	<!-- Google Analytics stuff -->
+	<!--<script type="text/javascript">
+
+	  var _gaq = _gaq || [];
+	  _gaq.push(['_setAccount', 'UA-45606982-1']);
+	  _gaq.push(['_trackPageview']);
+
+	  (function() {
+		var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+		ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+		var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+	  })();
+
+	</script>-->
+  </body>
+</html>
