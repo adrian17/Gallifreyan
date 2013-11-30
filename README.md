@@ -10,7 +10,7 @@ Status: 30%-ish. Only consonant lines are needed to be fully readable!
 
 ###About
 
-You can view the site at: https://gallifreyan-translator.herokuapp.com/
+You can view the site at: http://adrian17.github.io/Gallifreyan/
 The project's purpose is to quickly create complex and customizable Gallifreyan words/sentences, without the need for image processing tools.
 
 ###About the language
