@@ -6,10 +6,10 @@ var lineWidth=3.0;
 var mcR=midPoint*0.60;
 var PI=Math.PI;
 
-var mainCircles=[],
+var allCircles=[],
+	mainCircles=[],
 	currentCircle,	//points to an object from mainCircles
 	selectedCircle=-1, //index of element in currentCircle.children
-	selectedIsAChild=false;
 	snapMode=true;
 
 var lines=[];
@@ -103,8 +103,6 @@ function BigCircle(owner,type,subtype, d, r, a){
 		}
 		
 		if(dirtyRender){ctx.beginPath(); ctx.arc(this.x,this.y,3,0,PI*2);ctx.fillStyle="red"; ctx.fill();}
-		
-		for(i=0;i<this.children.length;i++) this.children[i].draw();
 	}
 	this.update=function(d, a){
 		var dx, dy;
@@ -115,7 +113,7 @@ function BigCircle(owner,type,subtype, d, r, a){
 			this.children[i].update(this.children[i].d, this.children[i].a-oldA+this.a);
 	}
 	this.owner=owner;
-	this.children=[]; this.canHaveChildren=1;
+	this.children=[]; this.canHaveChildren=1; this.isAChild=false;
 	this.type=type; this.subtype=subtype;
 	this.nLines=0; this.lines=[];
 	this.r = r;
@@ -146,25 +144,13 @@ $('canvas').click(function(e){
 	}
 	var i, j, k;
 	var minD=20;
-	for(i=0;i<mainCircles.length;++i){
-		for(j=0;j<mainCircles[i].children.length;++j){
-			for(k=0;k<mainCircles[i].children[j].children.length;k++){
-				var d=dist(mainCircles[i].children[j].children[k].x, mainCircles[i].children[j].children[k].y, clickX, clickY);
-				if (d<minD) {
-					if([2, 3, 5].contains(mainCircles[i].children[j].children[k].subtype)) break; //unselectable - always overlap their parent
-					minD=d;
-					selectedCircle=mainCircles[i].children[j].children[k];
-					selectedIsAChild=true;
-					currentCircle=mainCircles[i]; //TODO more words
-				}
-			}
-			var d=dist(mainCircles[i].children[j].x, mainCircles[i].children[j].y, clickX, clickY);
-			if (d<minD) {
-				minD=d; 
-				selectedCircle=j;
-				selectedIsAChild=false;
-				currentCircle=mainCircles[i]; //TODO more words
-			}
+	for(i=0;i<allCircles.length;++i){
+		var d=dist(allCircles[i].x, allCircles[i].y, clickX, clickY);
+		if (d<minD){
+			minD=d;
+			selectedCircle=allCircles[i];
+			if (selectedCircle.isAChild) currentCircle=selectedCircle.owner.owner;
+			else currentCircle=selectedCircle.owner;
 		}
 	}
 });
@@ -230,16 +216,13 @@ $('canvas').mousemove(function(e){
 	var moveX=e.pageX-$(this).position().left,moveY=e.pageY-$(this).position().top;
 	if(moveY<30) return;
 	if(selectedCircle != -1){
-		if(!selectedIsAChild)
-			var selected=currentCircle.children[selectedCircle];
-		else
-			var selected=selectedCircle;
+		var selected=selectedCircle;
 		var a=Math.atan2(moveY-selected.owner.y,moveX-selected.owner.x);
 		var d=dist(moveX, moveY, selected.owner.x, selected.owner.y);
-		
-		if(!selectedIsAChild && currentCircle.children.length>2){
-			var splus=(selectedCircle+1 >= currentCircle.children.length ? 0 : selectedCircle+1),
-				sminus=(selectedCircle-1 < 0 ? currentCircle.children.length-1 : selectedCircle-1);	//preserves order
+		if(!selected.isAChild && currentCircle.children.length>2){
+			var index=currentCircle.children.indexOf(selectedCircle);
+			var splus=(index+1 >= currentCircle.children.length ? 0 : index+1),
+				sminus=(index-1 < 0 ? currentCircle.children.length-1 : index-1);	//preserves order
 			var aplus=currentCircle.children[splus].a,
 				aminus=currentCircle.children[sminus].a;
 			if(aplus>aminus) {a>0?aminus+=2*PI:aplus-=2*PI;}	//still buggy
@@ -253,10 +236,8 @@ $('canvas').mousemove(function(e){
 
 $('canvas').mousewheel(function(event, delta, deltaX, deltaY){
 	if(selectedCircle != -1){
-		if(!selectedIsAChild)
-			var selected=currentCircle.children[selectedCircle];
-		else
-			var selected=selectedCircle;
+
+		var selected=selectedCircle;
 		var oldR=selected.r;
 		if (delta > 0 || deltaX>0 || deltaY>0) selected.r+=1; else selected.r-=1;
 
@@ -273,8 +254,9 @@ $('canvas').mousewheel(function(event, delta, deltaX, deltaY){
 });
 
 function drawAngles(){
-	var splus=(selectedCircle+1 >= currentCircle.children.length ? 0 : selectedCircle+1),
-		sminus=(selectedCircle-1 < 0 ? currentCircle.children.length-1 : selectedCircle-1);	//preserves order
+	var index=currentCircle.children.indexOf(selectedCircle);
+	var splus=(index+1 >= currentCircle.children.length ? 0 : index+1),
+		sminus=(index-1 < 0 ? currentCircle.children.length-1 : index-1);	//preserves order
 	ctx.strokeStyle="red";
 	ctx.beginPath(); ctx.moveTo(midPoint,midPoint);
 	ctx.lineTo(midPoint+Math.cos(currentCircle.children[splus].a)*(mcR*1.3), midPoint+Math.sin(currentCircle.children[splus].a)*(mcR*1.3));
@@ -297,7 +279,10 @@ function generateWord(word){
 	var i;
 	var owner, newCircle;
 	
-	var newMainCircle=new BigCircle({x:midPoint, y:midPoint, a:0}, 4,0,0, mcR, 0);
+	var newMainCircle = new BigCircle({x:midPoint, y:midPoint, a:0}, 4,0,0, mcR, 0);
+	
+	mainCircles.push(newMainCircle);
+	allCircles.push(newMainCircle);
 	
 	for(var i=0;i<word.length;i++)
 	{
@@ -333,6 +318,7 @@ function generateWord(word){
 				owner=owner.children[owner.children.length-1]
 				angle=owner.a;
 				newCircle=new BigCircle(owner, type, subtype, owner.r/2, r, owner.a+PI+PI/8);
+				newCircle.isAChild=true;
 				newCircle.canHaveChildren=0;
 				owner.canHaveChildren=0;
 			}
@@ -345,9 +331,9 @@ function generateWord(word){
 		newCircle.nLines=nLines;
 		updateLocation(newCircle, newCircle.d, newCircle.a);
 		owner.children.push(newCircle);
+		
+		allCircles.push(newCircle);
 	}
-	
-	mainCircles.push(newMainCircle);
 	
 	redraw();
 }
@@ -367,13 +353,13 @@ function redraw(){
 	//ctx.setTransform(1,0,0,1,0,0);	//TODO
 	ctx.lineWidth=lineWidth;
 	ctx.clearRect(0,0,canvasSize,canvasSize);
-	for(var i=0;i<mainCircles.length;++i){
-		mainCircles[i].draw();
+	for(var i=0;i<allCircles.length;++i){
+		allCircles[i].draw();
 	}
 	for(var i=0;i<lines.length;++i){
 		lines[i].draw();
 	}
 	if(mainCircles.length){ctx.beginPath(); ctx.arc(midPoint, midPoint,outerR,0,PI*2);ctx.stroke();}
-	if(selectedCircle!=-1 && !selectedIsAChild) drawAngles();
+	if(selectedCircle!=-1 && !selectedCircle.isAChild) drawAngles();
 	if(dirtyRender) {ctx.lineWidth=1; drawGUI();}
 }
