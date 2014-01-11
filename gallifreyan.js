@@ -117,6 +117,7 @@ function BigCircle(owner,type,subtype, d, r, a){
 	this.owner=owner;
 	this.children=[]; this.canHaveChildren=1;
 	this.type=type; this.subtype=subtype;
+	this.nLines=0; this.lines=[];
 	this.r = r;
 	this.update(d, a);
 }
@@ -307,6 +308,7 @@ function generateWord(word){
 		
 		var type=0, r=0, d=0;
 		var subtype=map[letter];
+		var nLines=[0, 0, 0, 3, 1, 2][subtype-1];
 		if(letter.match("^(b|ch|d|f|g|h)$")){
 			type=1,r=globalR,d=mcR-r+1;
 			newCircle = new BigCircle(owner,type,subtype, d, r, angle);
@@ -324,6 +326,7 @@ function generateWord(word){
 			newCircle = new BigCircle(owner,type,subtype, d, r, angle);
 		}
 		if(letter.match("(a|e|i|o|u)")){
+			nLines=[0, 0, 1, 0, 1][subtype-1];
 			r=mcR*0.05;
 			if(i!=0 && owner.children[owner.children.length-1].canHaveChildren==1){
 				type=6;
@@ -339,6 +342,7 @@ function generateWord(word){
 				newCircle.canHaveChildren=0;
 			}
 		}
+		newCircle.nLines=nLines;
 		updateLocation(newCircle, newCircle.d, newCircle.a);
 		owner.children.push(newCircle);
 	}
