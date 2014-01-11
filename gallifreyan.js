@@ -12,6 +12,8 @@ var mainCircles=[],
 	selectedIsAChild=false;
 	snapMode=true;
 
+var lines=[];
+
 var ctx;
 var dirtyRender=1;
 
@@ -60,6 +62,19 @@ function updateText(){
 		wordL++;
 	}
 	generateWord(word);
+}
+
+function Line(circle1, a1, circle2, a2){
+	this.draw=function(){
+		var x1=this.circle1.x+this.circle1.r*Math.cos(this.a1), y1=this.circle1.y+this.circle1.r*Math.sin(this.a1);
+		var x2=this.circle2.x+this.circle2.r*Math.cos(this.a2), y2=this.circle2.y+this.circle2.r*Math.sin(this.a2);
+		ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+		if(dirtyRender){ctx.beginPath(); ctx.arc(x1,y1,3,0,PI*2);ctx.fillStyle="red"; ctx.fill();
+						ctx.beginPath(); ctx.arc(x2,y2,3,0,PI*2);ctx.fillStyle="red"; ctx.fill();
+		}
+	}
+	this.circle1=circle1; this.a1=a1;
+	this.circle2=circle2; this.a2=a2;
 }
 
 function BigCircle(owner,type,subtype, d, r, a){
@@ -350,6 +365,9 @@ function redraw(){
 	ctx.clearRect(0,0,canvasSize,canvasSize);
 	for(var i=0;i<mainCircles.length;++i){
 		mainCircles[i].draw();
+	}
+	for(var i=0;i<lines.length;++i){
+		lines[i].draw();
 	}
 	if(mainCircles.length){ctx.beginPath(); ctx.arc(midPoint, midPoint,outerR,0,PI*2);ctx.stroke();}
 	if(selectedCircle!=-1 && !selectedIsAChild) drawAngles();
