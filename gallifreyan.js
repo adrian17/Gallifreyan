@@ -335,7 +335,17 @@ function generateWord(word){
 		allCircles.push(newCircle);
 	}
 	
+	createLines();
+	
 	redraw();
+}
+
+function createLines(){
+	//temporary
+	if(mainCircles[0].children.length>3){
+		var line=new Line(mainCircles[0].children[1], -PI/2, mainCircles[0].children[2], PI/2);
+		lines.push(line);
+	}
 }
 
 function drawGUI(){
