@@ -8,8 +8,8 @@ var PI=Math.PI;
 
 var allCircles=[],
 	mainCircles=[],
-	currentCircle,	//points to an object from mainCircles
-	selectedCircle=-1, //index of element in currentCircle.children
+	currentCircle,	//points to a mainCircle which contains selectedCircle
+	selectedCircle=-1, //points to selected circle
 	snapMode=true;
 
 var lines=[];
@@ -41,7 +41,7 @@ $(document).ready(function(){
 });
 
 function updateText(){
-	mainCircles=[];currentCircle=0;
+	mainCircles=[];allCircles=[];lines=[];currentCircle=0;
 	
 	var t=$('input').val().trim().toLowerCase().split(" ");
 	localStorage.setItem("input", $('input').val());
