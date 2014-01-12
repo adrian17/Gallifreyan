@@ -66,15 +66,18 @@ function updateText(){
 
 function Line(circle1, a1, circle2, a2){
 	this.draw=function(){
-		var x1=this.circle1.x+this.circle1.r*Math.cos(this.a1), y1=this.circle1.y+this.circle1.r*Math.sin(this.a1);
-		var x2=this.circle2.x+this.circle2.r*Math.cos(this.a2), y2=this.circle2.y+this.circle2.r*Math.sin(this.a2);
-		ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
-		if(dirtyRender){ctx.beginPath(); ctx.arc(x1,y1,3,0,PI*2);ctx.fillStyle="red"; ctx.fill();
-						ctx.beginPath(); ctx.arc(x2,y2,3,0,PI*2);ctx.fillStyle="red"; ctx.fill();
+		ctx.beginPath(); ctx.moveTo(this.x1, this.y1); ctx.lineTo(this.x2, this.y2); ctx.stroke();
+		if(dirtyRender){ctx.beginPath(); ctx.arc(this.x1,this.y1,3,0,PI*2);ctx.fillStyle="red"; ctx.fill();
+						ctx.beginPath(); ctx.arc(this.x2,this.y2,3,0,PI*2);ctx.fillStyle="red"; ctx.fill();
 		}
+	}
+	this.update=function(){
+		this.x1=this.circle1.x+this.circle1.r*Math.cos(this.a1); this.y1=this.circle1.y+this.circle1.r*Math.sin(this.a1);
+		this.x2=this.circle2.x+this.circle2.r*Math.cos(this.a2); this.y2=this.circle2.y+this.circle2.r*Math.sin(this.a2);
 	}
 	this.circle1=circle1; this.a1=a1;
 	this.circle2=circle2; this.a2=a2;
+	this.update();
 }
 
 function BigCircle(owner,type,subtype, d, r, a){
@@ -111,6 +114,8 @@ function BigCircle(owner,type,subtype, d, r, a){
 		this.x=this.owner.x+dx;this.y=this.owner.y+dy;this.a=a;this.d=d;
 		for(i=0;i<this.children.length;i++)
 			this.children[i].update(this.children[i].d, this.children[i].a-oldA+this.a);
+		for(i=0;i<this.lines.length;i++)
+			this.lines[i].update();
 	}
 	this.owner=owner;
 	this.children=[]; this.canHaveChildren=1; this.isAChild=false;
@@ -147,6 +152,7 @@ $('canvas').click(function(e){
 	for(i=0;i<allCircles.length;++i){
 		var d=dist(allCircles[i].x, allCircles[i].y, clickX, clickY);
 		if (d<minD){
+			if(mainCircles.indexOf(allCircles[i])!=-1) continue; //don't select mainCircles for now
 			minD=d;
 			selectedCircle=allCircles[i];
 			if (selectedCircle.isAChild) currentCircle=selectedCircle.owner.owner;
@@ -345,6 +351,8 @@ function createLines(){
 	if(mainCircles[0].children.length>3){
 		var line=new Line(mainCircles[0].children[1], -PI/2, mainCircles[0].children[2], PI/2);
 		lines.push(line);
+		mainCircles[0].children[1].lines.push(line);
+		mainCircles[0].children[2].lines.push(line);
 	}
 }
 
