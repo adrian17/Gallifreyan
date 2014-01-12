@@ -6,7 +6,7 @@ Gallifreyan
 ###Status
 
 Not finished at all :P
-Status: 30%-ish. Only consonant lines are needed to be fully readable!
+Status: 50%-ish. Only consonant lines are needed to be fully readable!
 
 ###About
 
@@ -20,11 +20,9 @@ You can find specific info about the alphabet here: http://www.shermansplanet.co
 
 
 TODO:
-- add consonant lines
-- make them movable
+- make some logic for creation of lines
 - support for doubled vowels/consonants
 - make the canvas and contents scalable
-- redo the selection system
 - clean up the code
 - improve the interface
 ...

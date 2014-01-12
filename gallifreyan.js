@@ -28,6 +28,12 @@ Array.prototype.contains = function(k){
             return true;
     return false;
 }
+
+Array.prototype.remove = function(from, to) {
+  var rest = this.slice((to || from) + 1 || this.length);
+  this.length = from < 0 ? this.length + from : from;
+  return this.push.apply(this, rest);
+};
 function dist(a,b,x,y){return Math.sqrt(Math.pow((a-x),2)+Math.pow((b-y),2))}
 
 $(document).ready(function(){
@@ -74,12 +80,22 @@ function Line(circle1, a1, circle2, a2){
 		}
 	}
 	this.update=function(){
-		this.points[0].x=this.circle1.x+this.circle1.r*Math.cos(this.a1); this.points[0].y=this.circle1.y+this.circle1.r*Math.sin(this.a1);
-		this.points[1].x=this.circle2.x+this.circle2.r*Math.cos(this.a2); this.points[1].y=this.circle2.y+this.circle2.r*Math.sin(this.a2);
+		for(var i=0;i<2;++i){
+			var point=this.points[i];
+			point.x=point.circle.x+point.circle.r*Math.cos(point.a);
+			point.y=point.circle.y+point.circle.r*Math.sin(point.a);
+		}
 	}
-	this.circle1=circle1; this.a1=a1;
-	this.circle2=circle2; this.a2=a2;
+	this.updatePoint=function(i, circle, a){
+		var point=this.points[i];
+		point.circle.lines.remove(point.circle.lines.indexOf(this));
+		point.circle=circle; circle.lines.push(this);
+		point.a=a;
+		this.update();
+	}
 	this.points=[];this.points.push({});this.points.push({});
+	this.points[0].circle=circle1; this.points[0].a=a1;
+	this.points[1].circle=circle2; this.points[1].a=a2;
 	this.update();
 }
 
@@ -251,6 +267,20 @@ $('canvas').mousemove(function(e){
 		}
 
 		updateLocation(selected, d, a);
+		redraw();
+	}
+	var i, a;
+	if(selectedLine != -1){
+		var selected=selectedLine;
+		var minD=20;
+		for(i=0;i<allCircles.length;++i){
+			var d=dist(moveX, moveY, allCircles[i].x, allCircles[i].y)-allCircles[i].r; d=Math.abs(d);
+			if(d<minD){
+				minD=d;
+				a=Math.atan2(moveY-allCircles[i].y,moveX-allCircles[i].x);
+				selected.updatePoint(lineEnd, allCircles[i], a);
+			}
+		}
 		redraw();
 	}
 });
