@@ -45,6 +45,8 @@ $(document).ready(function(){
 	canvas.setAttribute('height', canvasSize);
 	ctx=canvas.getContext("2d");
 	
+	createGUI();
+	
 	redraw();
 });
 
@@ -160,13 +162,11 @@ $('canvas').click(function(e){
 	var clickX = e.pageX-$(this).position().left, clickY = e.pageY-$(this).position().top;
 	if(selectedCircle != -1) {selectedCircle=-1; redraw(); return;}
 	if(selectedLine != -1) {selectedLine=-1; redraw(); return;}
-	if (clickY<30)
-	{
-		if(clickX<80){createFinalImage(); return;}
-		if(clickX>80 && clickX<120){lineWidth+=0.5; redraw();return;}
-		if(clickX>120 && clickX<160){lineWidth-=0.5;if(lineWidth<0.5)lineWidth=0.5; redraw();return;}
-		return;
+	
+	for(var i=0;i<buttons.length;++i){
+		if(buttons[i].click(clickX, clickY)) return;
 	}
+	
 	var i, j, k;
 	var minD=20;
 	for(i=0;i<allCircles.length;++i){
@@ -199,8 +199,7 @@ $(document).on("contextmenu", "canvas", function(e){
    return false;
 });
 
-function updateLocation(selected, d, a)
-{
+function updateLocation(selected, d, a){
 	if(!snapMode) {selected.update(d, a); return;}
 	switch(selected.type){
 		case 1:
@@ -403,12 +402,9 @@ function createLines(){
 }
 
 function drawGUI(){
-	ctx.fillStyle="black";
-	ctx.beginPath(); ctx.moveTo(80,0); ctx.lineTo(80,30); ctx.lineTo(0,30); ctx.stroke();
-	ctx.font="20px Georgia"; ctx.fillText("save",10,20);
-	ctx.beginPath(); ctx.moveTo(80,30); ctx.lineTo(120,30); ctx.lineTo(120,0); ctx.stroke();
-	ctx.beginPath(); ctx.moveTo(120,30); ctx.lineTo(160,30); ctx.lineTo(160,0); ctx.stroke();
-	ctx.fillText("+      -",90,20);
+	for(var i=0;i<buttons.length;++i){
+		buttons[i].draw();
+	}
 	ctx.fillText("(left click) edit mode: "+(selectedCircle==-1?"no":"yes"),10,canvasSize-50);
 	ctx.fillText("(right click) will snap according to rules: "+(snapMode?"yes":"no"),10,canvasSize-20);
 }
