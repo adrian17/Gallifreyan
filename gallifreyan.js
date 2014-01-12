@@ -170,7 +170,7 @@ $('canvas').click(function(e){
 	
 	var i, j, k;
 	var minD=20;
-	for(i=0;i<allCircles.length;++i){
+	for(i=1;i<allCircles.length;++i){	//#0 is unselectable
 		var d=dist(allCircles[i].x, allCircles[i].y, clickX, clickY);
 		if (d<minD){
 			if(mainCircles.indexOf(allCircles[i])!=-1) continue; //don't select mainCircles for now
@@ -331,6 +331,8 @@ function generateWord(word){
 	var i;
 	var owner, newCircle;
 	
+	allCircles.push(new BigCircle({x:midPoint, y:midPoint, a:0}, 4,0,0, outerR, 0));
+	
 	var newMainCircle = new BigCircle({x:midPoint, y:midPoint, a:0}, 4,0,0, mcR, 0);
 	
 	mainCircles.push(newMainCircle);
@@ -417,7 +419,6 @@ function redraw(){
 	for(var i=0;i<lines.length;++i){
 		lines[i].draw();
 	}
-	if(mainCircles.length){ctx.beginPath(); ctx.arc(midPoint, midPoint,outerR,0,PI*2);ctx.stroke();}
 	if(selectedCircle!=-1 && !selectedCircle.isAChild) drawAngles();
 	if(dirtyRender) {ctx.lineWidth=1; drawGUI();}
 }
