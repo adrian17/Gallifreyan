@@ -173,6 +173,7 @@ $('canvas').click(function(e){
 		var d=dist(allCircles[i].x, allCircles[i].y, clickX, clickY);
 		if (d<minD){
 			if(mainCircles.indexOf(allCircles[i])!=-1) continue; //don't select mainCircles for now
+			if(allCircles[i].isAChild && [2, 3, 5].contains(allCircles[i].subtype)) continue; //unselectable - always overlap their parent
 			minD=d;
 			selectedCircle=allCircles[i];
 			if (selectedCircle.isAChild) currentCircle=selectedCircle.owner.owner;
