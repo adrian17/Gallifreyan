@@ -403,7 +403,7 @@ function drawGUI(){
 	for(var i=0;i<buttons.length;++i){
 		buttons[i].draw();
 	}
-	ctx.fillText("(left click) edit mode: "+(selectedCircle==-1?"no":"yes"),10,canvasSize-50);
+	ctx.fillText("(left click) edit mode: "+((selectedCircle==-1 && selectedLine==-1)?"no":"yes"),10,canvasSize-50);
 	ctx.fillText("(right click) will snap according to rules: "+(snapMode?"yes":"no"),10,canvasSize-20);
 }
 
