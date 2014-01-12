@@ -98,6 +98,7 @@ function Line(circle1, a1, circle2, a2){
 	this.points=[];this.points.push({});this.points.push({});
 	this.points[0].circle=circle1; this.points[0].a=a1;
 	this.points[1].circle=circle2; this.points[1].a=a2;
+	circle1.lines.push(this); circle2.lines.push(this);
 	this.update();
 }
 
@@ -394,10 +395,7 @@ function generateWord(word){
 function createLines(){
 	//temporary
 	if(mainCircles[0].children.length>3){
-		var line=new Line(mainCircles[0].children[1], -PI/2, mainCircles[0].children[2], PI/2);
-		lines.push(line);
-		mainCircles[0].children[1].lines.push(line);
-		mainCircles[0].children[2].lines.push(line);
+		lines.push(new Line(mainCircles[0].children[1], -PI/2, mainCircles[0].children[2], PI/2));
 	}
 }
 
