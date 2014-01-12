@@ -12,7 +12,9 @@ var allCircles=[],
 	selectedCircle=-1, //points to selected circle
 	snapMode=true;
 
-var lines=[];
+var lines=[],
+	selectedLine=-1,
+	lineEnd=0;
 
 var ctx;
 var dirtyRender=1;
@@ -66,17 +68,18 @@ function updateText(){
 
 function Line(circle1, a1, circle2, a2){
 	this.draw=function(){
-		ctx.beginPath(); ctx.moveTo(this.x1, this.y1); ctx.lineTo(this.x2, this.y2); ctx.stroke();
-		if(dirtyRender){ctx.beginPath(); ctx.arc(this.x1,this.y1,3,0,PI*2);ctx.fillStyle="red"; ctx.fill();
-						ctx.beginPath(); ctx.arc(this.x2,this.y2,3,0,PI*2);ctx.fillStyle="red"; ctx.fill();
+		ctx.beginPath(); ctx.moveTo(this.points[0].x, this.points[0].y); ctx.lineTo(this.points[1].x, this.points[1].y); ctx.stroke();
+		if(dirtyRender){ctx.beginPath(); ctx.arc(this.points[0].x,this.points[0].y,3,0,PI*2);ctx.fillStyle="red"; ctx.fill();
+						ctx.beginPath(); ctx.arc(this.points[1].x,this.points[1].y,3,0,PI*2);ctx.fillStyle="red"; ctx.fill();
 		}
 	}
 	this.update=function(){
-		this.x1=this.circle1.x+this.circle1.r*Math.cos(this.a1); this.y1=this.circle1.y+this.circle1.r*Math.sin(this.a1);
-		this.x2=this.circle2.x+this.circle2.r*Math.cos(this.a2); this.y2=this.circle2.y+this.circle2.r*Math.sin(this.a2);
+		this.points[0].x=this.circle1.x+this.circle1.r*Math.cos(this.a1); this.points[0].y=this.circle1.y+this.circle1.r*Math.sin(this.a1);
+		this.points[1].x=this.circle2.x+this.circle2.r*Math.cos(this.a2); this.points[1].y=this.circle2.y+this.circle2.r*Math.sin(this.a2);
 	}
 	this.circle1=circle1; this.a1=a1;
 	this.circle2=circle2; this.a2=a2;
+	this.points=[];this.points.push({});this.points.push({});
 	this.update();
 }
 
@@ -140,6 +143,7 @@ function createFinalImage(){
 $('canvas').click(function(e){
 	var clickX = e.pageX-$(this).position().left, clickY = e.pageY-$(this).position().top;
 	if(selectedCircle != -1) {selectedCircle=-1; redraw(); return;}
+	if(selectedLine != -1) {selectedLine=-1; redraw(); return;}
 	if (clickY<30)
 	{
 		if(clickX<80){createFinalImage(); return;}
@@ -159,6 +163,17 @@ $('canvas').click(function(e){
 			else currentCircle=selectedCircle.owner;
 		}
 	}
+	for(i=0;i<lines.length;++i){
+		for(j=0;j<2;++j){
+			var d=dist(lines[i].points[j].x, lines[i].points[j].y, clickX, clickY);
+			if(d<minD){
+			minD=d;
+			selectedLine=lines[i];
+			lineEnd=j;
+			}
+		}
+	}
+	if(selectedLine!=-1){selectedCircle=-1;}
 });
 
 $(document).on("contextmenu", "canvas", function(e){
