@@ -401,10 +401,19 @@ function createLines(){
 	}
 }
 
+function checkLines(){
+	for(var i=1;i<allCircles.length;++i){	//we don't check the first circle
+		if(mainCircles.indexOf(allCircles[i])!=-1) continue;	//also skip mainCircles
+		if(allCircles[i].nLines!=allCircles[i].lines.length) return 0;
+	}
+	return 1;
+}
+
 function drawGUI(){
 	for(var i=0;i<buttons.length;++i){
 		buttons[i].draw();
 	}
+	ctx.fillText("are lines correct?: "+(checkLines()?"yes":"no"),10,canvasSize-80);
 	ctx.fillText("(left click) edit mode: "+((selectedCircle==-1 && selectedLine==-1)?"no":"yes"),10,canvasSize-50);
 	ctx.fillText("(right click) will snap according to rules: "+(snapMode?"yes":"no"),10,canvasSize-20);
 }
