@@ -394,10 +394,33 @@ function generateWord(word){
 	redraw();
 }
 
-function createLines(){
-	//temporary
-	if(mainCircles[0].children.length>3){
-		lines.push(new Line(mainCircles[0].children[1], -PI/2, mainCircles[0].children[2], PI/2));
+function createLines(){	//need to improve: more passes to reduce amount of crossing
+	var i, j, k, circle, circle2, intersection, angle;
+	for(i=1;i<allCircles.length;++i){
+		circle=allCircles[i];
+		if(circle.nLines==0) continue;
+		
+		while(circle.lines.length<circle.nLines){
+			if(circle.type==6){if(circle.subtype==3) var angle=circle.owner.a+PI;else angle=circle.owner.a;}
+			else if(circle.type==5 && circle.subtype==5) angle=circle.a;
+			else angle=circle.a+PI+(Math.random()-0.5)*PI/2;
+			
+			var x=circle.x+circle.r*Math.cos(angle), y=circle.y+circle.r*Math.sin(angle);
+			var best, bestA, dist=10000;
+			
+			for(j=0;j<allCircles.length;++j){
+				if(j==i) continue;
+				circle2=allCircles[j];
+				if(j!=0 && circle2.lines.length>=circle2.nLines) continue;
+				intersection=findIntersection(circle2.x, circle2.y, circle2.r, x, y, angle);
+				if(intersection!==0) {
+					if(intersection.t<dist){
+						dist=intersection.t; best=allCircles[j];bestA=intersection.a;
+					}
+				}
+			}
+			lines.push(new Line(circle, angle, best, bestA));
+		}
 	}
 }
 

@@ -20,8 +20,9 @@ You can find specific info about the alphabet here: http://www.shermansplanet.co
 
 
 TODO:
-- make some logic for creation of lines
+- improve line logic
 - support for doubled vowels/consonants
+- manual addition/deletion of lines
 - make the canvas and contents scalable
 - clean up the code
 - improve the interface
