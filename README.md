@@ -5,8 +5,8 @@ Gallifreyan
 
 ###Status
 
-Not finished at all :P
-Status: 50%-ish. Only consonant lines are needed to be fully readable!
+60%-ish.
+It works! Still needs a lot of polish though.
 
 ###About
 
@@ -20,7 +20,6 @@ You can find specific info about the alphabet here: http://www.shermansplanet.co
 
 
 TODO:
-- improve line logic
 - support for doubled vowels/consonants
 - manual addition/deletion of lines
 - make the canvas and contents scalable

@@ -396,30 +396,66 @@ function generateWord(word){
 
 function createLines(){	//need to improve: more passes to reduce amount of crossing
 	var i, j, k, circle, circle2, intersection, angle;
+	var bestAngle, inter, minInter;
 	for(i=1;i<allCircles.length;++i){
 		circle=allCircles[i];
 		if(circle.nLines==0) continue;
 		
+		var passes=0;
 		while(circle.lines.length<circle.nLines){
-			if(circle.type==6){if(circle.subtype==3) var angle=circle.owner.a+PI;else angle=circle.owner.a;}
-			else if(circle.type==5 && circle.subtype==5) angle=circle.a;
-			else angle=circle.a+PI+(Math.random()-0.5)*PI/2;
-			
-			var x=circle.x+circle.r*Math.cos(angle), y=circle.y+circle.r*Math.sin(angle);
-			var best, bestA, dist=10000;
-			
-			for(j=0;j<allCircles.length;++j){
+			//looks for the best path to the base circle if there are no other options left
+			if(passes>100 || (circle.type>=5 && circle.subtype==5)){
+				if(circle.type==6){if(circle.subtype==3) var angle=circle.owner.a+PI;else angle=circle.owner.a;}
+				else if(circle.type==5 && circle.subtype==5) angle=circle.a;
+				else angle=circle.a+PI;
+				
+				circle2=allCircles[0];	//the only one left
+				
+				//let's look for the path with the least intersections
+				minInter=1000;
+				for(var n=0;n<100;++n){
+					inter=0;
+					var randAngle=angle+(Math.random()-0.5)*(circle.type==6 ? PI/6 : PI/2);
+					var x=circle.x+circle.r*Math.cos(randAngle), y=circle.y+circle.r*Math.sin(randAngle);
+					intersection=findIntersection(circle2.x, circle2.y, circle2.r, x, y, randAngle);
+					var maxT=intersection.t;
+					
+					for(k=1;k<allCircles.length;++k){
+						if(k==i) continue;
+						var circle3=allCircles[k];
+						intersection=findIntersection(circle3.x, circle3.y, circle3.r, x, y, randAngle);
+						if(intersection==0) continue;
+						if(intersection.t<maxT) inter++;
+					}
+					if(inter<minInter) {minInter=inter; bestAngle=randAngle;}
+				}
+				var x=circle.x+circle.r*Math.cos(bestAngle), y=circle.y+circle.r*Math.sin(bestAngle);
+				intersection=findIntersection(circle2.x, circle2.y, circle2.r, x, y, bestAngle);
+				lines.push(new Line(circle, bestAngle, circle2, intersection.a));
+				if(circle.type>=5) break;
+				else continue;
+			}
+			//normal routine, searches for pairs that still need circles
+			for(j=1;j<allCircles.length;++j){
 				if(j==i) continue;
 				circle2=allCircles[j];
-				if(j!=0 && circle2.lines.length>=circle2.nLines) continue;
+				if(circle2.lines.length>=circle2.nLines) continue;
+				if(circle2.type>=5 && circle2.subtype==5) continue;
+				
+				angle=Math.atan2(circle2.y-circle.y,circle2.x-circle.x);
+				var x=circle.x+circle.r*Math.cos(angle), y=circle.y+circle.r*Math.sin(angle);
+
 				intersection=findIntersection(circle2.x, circle2.y, circle2.r, x, y, angle);
-				if(intersection!==0) {
-					if(intersection.t<dist){
-						dist=intersection.t; best=allCircles[j];bestA=intersection.a;
-					}
+				if(intersection==0)continue;
+				var rand=(Math.random()-0.5)*PI/6;
+				if(Math.floor(Math.random()+0.4)) {
+					lines.push(new Line(circle, angle+rand, circle2, intersection.a-rand));
 				}
+				if(circle.lines.length>=circle.nLines) break;
+				//if(Math.floor(Math.random()+0.1)) break;
 			}
-			lines.push(new Line(circle, angle, best, bestA));
+			passes++;
+			if(passes>103) break;
 		}
 	}
 }
