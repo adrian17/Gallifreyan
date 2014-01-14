@@ -76,9 +76,12 @@ function updateText(){
 
 function Line(circle1, a1, circle2, a2){
 	this.draw=function(){
+		if(selectedLine==this) ctx.strokeStyle="grey"; 
 		ctx.beginPath(); ctx.moveTo(this.points[0].x, this.points[0].y); ctx.lineTo(this.points[1].x, this.points[1].y); ctx.stroke();
-		if(dirtyRender){ctx.beginPath(); ctx.arc(this.points[0].x,this.points[0].y,3,0,PI*2);ctx.fillStyle="red"; ctx.fill();
-						ctx.beginPath(); ctx.arc(this.points[1].x,this.points[1].y,3,0,PI*2);ctx.fillStyle="red"; ctx.fill();
+		ctx.strokeStyle="black"; 
+		if(dirtyRender && this.selectable){ctx.fillStyle="red"; 
+						ctx.beginPath(); ctx.arc(this.points[0].x,this.points[0].y,3,0,PI*2);ctx.fill();
+						ctx.beginPath(); ctx.arc(this.points[1].x,this.points[1].y,3,0,PI*2);ctx.fill();
 		}
 	}
 	this.update=function(){
@@ -95,16 +98,17 @@ function Line(circle1, a1, circle2, a2){
 		point.a=a;
 		this.update();
 	}
-	this.points=[];this.points.push({});this.points.push({});
-	this.points[0].circle=circle1; this.points[0].a=a1;
-	this.points[1].circle=circle2; this.points[1].a=a2;
+	this.points=[{circle:circle1, a:a1},
+				 {circle:circle2, a:a2}];
+	this.selectable=true;
+	
 	circle1.lines.push(this); circle2.lines.push(this);
 	this.update();
 }
 
 function BigCircle(owner,type,subtype, d, r, a){
 	this.draw = function(){
-		var i;
+		if(selectedCircle==this) ctx.strokeStyle="grey"; 
 		if(this.type==3 || this.type==1){
 			var d, an;
 			d=dist(this.x, this.y, midPoint, midPoint);
@@ -120,14 +124,14 @@ function BigCircle(owner,type,subtype, d, r, a){
 		{
 			if(this.subtype==2 || this.subtype==3){		//DOTS
 				var dotR, r, delta;
-				for(i=2;i<this.subtype+2;i++){
+				for(var i=2;i<this.subtype+2;i++){
 					dotR=2+lineWidth/2, r=this.r-2.5*dotR, delta=(globalR/this.r)*i/3;
 					ctx.beginPath();ctx.arc(this.x-Math.cos(this.a+delta)*r,this.y-Math.sin(this.a+delta)*r,dotR,0,PI*2);ctx.fillStyle="black"; ctx.fill();
 				}
 			}
 		}
-		
-		if(dirtyRender){ctx.beginPath(); ctx.arc(this.x,this.y,3,0,PI*2);ctx.fillStyle="red"; ctx.fill();}
+		ctx.strokeStyle="black"; 
+		if(dirtyRender && this.selectable){ctx.beginPath(); ctx.arc(this.x,this.y,3,0,PI*2);ctx.fillStyle="red"; ctx.fill();}
 	}
 	this.update=function(d, a){
 		var dx, dy;
@@ -143,6 +147,7 @@ function BigCircle(owner,type,subtype, d, r, a){
 	this.children=[];
 	this.type=type; this.subtype=subtype;
 	this.nLines=0; this.lines=[];
+	this.selectable=true;
 	this.r = r;
 	this.update(d, a);
 }
@@ -170,11 +175,10 @@ $('canvas').click(function(e){
 	
 	var i, j, k;
 	var minD=20;
-	for(i=1;i<allCircles.length;++i){	//#0 is unselectable
+	for(i=0;i<allCircles.length;++i){
+		if(!allCircles[i].selectable) continue;
 		var d=dist(allCircles[i].x, allCircles[i].y, clickX, clickY);
 		if (d<minD){
-			if(mainCircles.indexOf(allCircles[i])!=-1) continue; //don't select mainCircles for now
-			if(allCircles[i].type==6 && [2, 3, 5].contains(allCircles[i].subtype)) continue; //unselectable - always overlap their parent
 			minD=d;
 			selectedCircle=allCircles[i];
 			if (selectedCircle.type==6) currentCircle=selectedCircle.owner.owner;
@@ -182,6 +186,7 @@ $('canvas').click(function(e){
 		}
 	}
 	for(i=0;i<lines.length;++i){
+		if(!lines[i].selectable) continue;
 		for(j=0;j<2;++j){
 			var d=dist(lines[i].points[j].x, lines[i].points[j].y, clickX, clickY);
 			if(d<minD){
@@ -332,8 +337,10 @@ function generateWord(word){
 	var owner, newCircle;
 	
 	allCircles.push(new BigCircle({x:midPoint, y:midPoint, a:0}, 4,0,0, outerR, 0));
+	allCircles[0].selectable=false;
 	
 	var newMainCircle = new BigCircle({x:midPoint, y:midPoint, a:0}, 4,0,0, mcR, 0);
+	newMainCircle.selectable=false;		//don't select mainCircles for now
 	
 	mainCircles.push(newMainCircle);
 	allCircles.push(newMainCircle);
@@ -373,6 +380,7 @@ function generateWord(word){
 				owner=previous;
 				angle=previous.a;
 				newCircle=new BigCircle(owner, type, subtype, owner.r/2, r, owner.a+PI+PI/8);
+				if([2, 3, 5].contains(subtype)) newCircle.selectable=false;
 			}
 			else{
 				type=5, d=mcR;
