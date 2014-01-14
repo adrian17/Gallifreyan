@@ -485,9 +485,10 @@ function redraw(){
 	//ctx.setTransform(1,0,0,1,0,0);	//TODO
 	ctx.lineWidth=lineWidth;
 	ctx.clearRect(0,0,canvasSize,canvasSize);
-	for(var i=0;i<allCircles.length;++i){
+	for(var i=1;i<allCircles.length;++i){
 		allCircles[i].draw();
 	}
+	allCircles[0].draw();
 	for(var i=0;i<lines.length;++i){
 		lines[i].draw();
 	}
