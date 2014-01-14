@@ -140,7 +140,7 @@ function BigCircle(owner,type,subtype, d, r, a){
 			this.lines[i].update();
 	}
 	this.owner=owner;
-	this.children=[]; this.canHaveChildren=1; this.isAChild=false;
+	this.children=[];
 	this.type=type; this.subtype=subtype;
 	this.nLines=0; this.lines=[];
 	this.r = r;
@@ -174,10 +174,10 @@ $('canvas').click(function(e){
 		var d=dist(allCircles[i].x, allCircles[i].y, clickX, clickY);
 		if (d<minD){
 			if(mainCircles.indexOf(allCircles[i])!=-1) continue; //don't select mainCircles for now
-			if(allCircles[i].isAChild && [2, 3, 5].contains(allCircles[i].subtype)) continue; //unselectable - always overlap their parent
+			if(allCircles[i].type==6 && [2, 3, 5].contains(allCircles[i].subtype)) continue; //unselectable - always overlap their parent
 			minD=d;
 			selectedCircle=allCircles[i];
-			if (selectedCircle.isAChild) currentCircle=selectedCircle.owner.owner;
+			if (selectedCircle.type==6) currentCircle=selectedCircle.owner.owner;
 			else currentCircle=selectedCircle.owner;
 		}
 	}
@@ -257,7 +257,7 @@ $('canvas').mousemove(function(e){
 		var selected=selectedCircle;
 		var a=Math.atan2(moveY-selected.owner.y,moveX-selected.owner.x);
 		var d=dist(moveX, moveY, selected.owner.x, selected.owner.y);
-		if(!selected.isAChild && currentCircle.children.length>2){
+		if(!selected.type==6 && currentCircle.children.length>2){
 			var index=currentCircle.children.indexOf(selectedCircle);
 			var splus=(index+1 >= currentCircle.children.length ? 0 : index+1),
 				sminus=(index-1 < 0 ? currentCircle.children.length-1 : index-1);	//preserves order
@@ -367,19 +367,16 @@ function generateWord(word){
 		if(letter.match("(a|e|i|o|u)")){
 			nLines=[0, 0, 1, 0, 1][subtype-1];
 			r=mcR*0.05;
-			if(i!=0 && owner.children[owner.children.length-1].canHaveChildren==1){
+			var previous=owner.children[owner.children.length-1];
+			if(i!=0 && previous.type<5 && previous.children.length==0){
 				type=6;
-				owner=owner.children[owner.children.length-1]
-				angle=owner.a;
+				owner=previous;
+				angle=previous.a;
 				newCircle=new BigCircle(owner, type, subtype, owner.r/2, r, owner.a+PI+PI/8);
-				newCircle.isAChild=true;
-				newCircle.canHaveChildren=0;
-				owner.canHaveChildren=0;
 			}
 			else{
 				type=5, d=mcR;
 				newCircle=new BigCircle(owner, type, subtype,owner.r, r, angle);
-				newCircle.canHaveChildren=0;
 			}
 		}
 		newCircle.nLines=nLines;
@@ -452,7 +449,6 @@ function createLines(){	//need to improve: more passes to reduce amount of cross
 					lines.push(new Line(circle, angle+rand, circle2, intersection.a-rand));
 				}
 				if(circle.lines.length>=circle.nLines) break;
-				//if(Math.floor(Math.random()+0.1)) break;
 			}
 			passes++;
 			if(passes>103) break;
@@ -487,6 +483,6 @@ function redraw(){
 	for(var i=0;i<lines.length;++i){
 		lines[i].draw();
 	}
-	if(selectedCircle!=-1 && !selectedCircle.isAChild) drawAngles();
+	if(selectedCircle!=-1 && !selectedCircle.type==6) drawAngles();
 	if(dirtyRender) {ctx.lineWidth=1; drawGUI();}
 }
