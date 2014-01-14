@@ -20,13 +20,14 @@ You can find specific info about the alphabet here: http://www.shermansplanet.co
 
 
 TODO:
-- support for doubled vowels/consonants
+- doubled vowels/consonants
 - manual addition/deletion of lines
-- make the canvas and contents scalable
-- clean up the code
-- improve the interface
+- manually detach/reattach merged circles
+- better resolution
+- make the canvas and contents scalable and scrollable
 ...
 - multiple words
 - support for punctuation, numbers?
+- remember the state if only one of the words was changed?
 
 (and probably lots of small stuff that I didn't even think about as it's my first web app project)
