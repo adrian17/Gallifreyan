@@ -160,7 +160,9 @@ function createFinalImage(){
 		if(imgData.data[i]==255 && imgData.data[i+1]==255 && imgData.data[i+2]==255) imgData.data[i+3]=0;	//converts white to transparency
 	ctx.putImageData(imgData,0,0);
 	var dataURL = canvas.toDataURL();
-	document.location.href = dataURL;
+	window.open(dataURL);
+	dirtyRender=1;
+	redraw();
 	return;
 }
 
