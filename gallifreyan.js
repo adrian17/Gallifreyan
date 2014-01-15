@@ -239,7 +239,7 @@ $('canvas').mousemove(function(e){
 		var selected=selectedCircle;
 		var a=Math.atan2(mouse.y-selected.owner.y,mouse.x-selected.owner.x);
 		var d=dist(mouse.x, mouse.y, selected.owner.x, selected.owner.y);
-		if(!selected.type==6 && currentCircle.children.length>2){
+		if(selected.type!=6 && currentCircle.children.length>2){
 			var index=currentCircle.children.indexOf(selectedCircle);
 			var splus=(index+1 >= currentCircle.children.length ? 0 : index+1),
 				sminus=(index-1 < 0 ? currentCircle.children.length-1 : index-1);	//preserves order
@@ -467,7 +467,7 @@ function redraw(){
 	for(var i=0;i<lines.length;++i){
 		lines[i].draw();
 	}
-	if(selectedCircle!=-1 && !selectedCircle.type==6) drawAngles();
+	if(selectedCircle!=-1 && selectedCircle.type!=6) drawAngles();
 	
 	ctx.setTransform(1,0,0,1, 0, 0);
 	if(dirtyRender) {drawGUI();}
