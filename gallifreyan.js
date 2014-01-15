@@ -154,7 +154,7 @@ $('canvas').click(function(e){
 	if(selectedLine != -1) {selectedLine=-1; redraw(); return;}
 	
 	for(var i=0;i<buttons.length;++i){
-		if(buttons[i].click(mouse.x, mouse.y)) return;
+		if(buttons[i].click(e)) return;
 	}
 	
 	var i, j, k;

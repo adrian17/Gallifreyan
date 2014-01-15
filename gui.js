@@ -9,7 +9,9 @@ function Button(x, y, width, text, f){
 		ctx.font="50px Georgia"; ctx.fillText(text,this.x+20,this.y+this.height-20);
 		ctx.lineWidth=temp;
 	}
-	this.click=function(clickX, clickY){
+	this.click=function(e){
+		var clickX = e.pageX-$('canvas').position().left, clickY = e.pageY-$('canvas').position().top;
+		clickX=clickX*canvasScale, clickY=clickY*canvasScale;
 		if(clickX>this.x && clickX<this.x+this.width && clickY>this.y && clickY<this.y+this.height){
 			this.f();
 			return 1;
