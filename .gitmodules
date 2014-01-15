@@ -1,3 +1,6 @@
 [submodule "jquery-mousewheel"]
 	path = jquery-mousewheel
 	url = https://github.com/brandonaaron/jquery-mousewheel.git
+[submodule "scroller"]
+	path = scroller
+	url = https://github.com/zynga/scroller.git

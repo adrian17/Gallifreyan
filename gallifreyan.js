@@ -1,8 +1,9 @@
-﻿var canvasSize = 800;
+﻿var canvasSize = 2000.0;
+var canvasScale=canvasSize/800;
 var midPoint = canvasSize / 2;
 var outerR=midPoint*0.9;
 var globalR;
-var lineWidth=3.0;
+var lineWidth=6.0;
 var mcR=midPoint*0.60;
 var PI=Math.PI;
 
@@ -16,7 +17,6 @@ var lines=[],
 	selectedLine=-1,
 	lineEnd=0;
 
-var ctx;
 var dirtyRender=1;
 
 var word,
@@ -38,12 +38,8 @@ function dist(a,b,x,y){return Math.sqrt(Math.pow((a-x),2)+Math.pow((b-y),2))}
 
 $(document).ready(function(){
 	$('input').val(localStorage.getItem("input"));
-
-	var canvas=document.getElementById("canvas");
-	canvas.onselectstart = function () { return false; }
-	canvas.setAttribute('width', canvasSize);
-	canvas.setAttribute('height', canvasSize);
-	ctx=canvas.getContext("2d");
+	
+	prepareCanvas();
 	
 	createGUI();
 	
@@ -80,8 +76,8 @@ function Line(circle1, a1, circle2, a2){
 		ctx.beginPath(); ctx.moveTo(this.points[0].x, this.points[0].y); ctx.lineTo(this.points[1].x, this.points[1].y); ctx.stroke();
 		ctx.strokeStyle="black"; 
 		if(dirtyRender && this.selectable){ctx.fillStyle="red"; 
-						ctx.beginPath(); ctx.arc(this.points[0].x,this.points[0].y,3,0,PI*2);ctx.fill();
-						ctx.beginPath(); ctx.arc(this.points[1].x,this.points[1].y,3,0,PI*2);ctx.fill();
+						ctx.beginPath(); ctx.arc(this.points[0].x,this.points[0].y,6,0,PI*2);ctx.fill();
+						ctx.beginPath(); ctx.arc(this.points[1].x,this.points[1].y,6,0,PI*2);ctx.fill();
 		}
 	}
 	this.update=function(){
@@ -124,14 +120,14 @@ function BigCircle(owner,type,subtype, d, r, a){
 		{
 			if(this.subtype==2 || this.subtype==3){		//DOTS
 				var dotR, r, delta;
-				for(var i=2;i<this.subtype+2;i++){
-					dotR=2+lineWidth/2, r=this.r-2.5*dotR, delta=(globalR/this.r)*i/3;
+				for(var i=1;i<this.subtype+1;i++){
+					dotR=4+lineWidth/2, r=this.r-3*dotR, delta=(globalR/this.r)*i/3;
 					ctx.beginPath();ctx.arc(this.x-Math.cos(this.a+delta)*r,this.y-Math.sin(this.a+delta)*r,dotR,0,PI*2);ctx.fillStyle="black"; ctx.fill();
 				}
 			}
 		}
 		ctx.strokeStyle="black"; 
-		if(dirtyRender && this.selectable){ctx.beginPath(); ctx.arc(this.x,this.y,3,0,PI*2);ctx.fillStyle="red"; ctx.fill();}
+		if(dirtyRender && this.selectable){ctx.beginPath(); ctx.arc(this.x,this.y,6,0,PI*2);ctx.fillStyle="red"; ctx.fill();}
 	}
 	this.update=function(d, a){
 		var dx, dy;
@@ -152,34 +148,20 @@ function BigCircle(owner,type,subtype, d, r, a){
 	this.update(d, a);
 }
 
-function createFinalImage(){
-	dirtyRender=0;
-	redraw();
-	var imgData=ctx.getImageData(0,0,canvasSize,canvasSize);
-	for (var i=0;i<imgData.data.length;i+=4)
-		if(imgData.data[i]==255 && imgData.data[i+1]==255 && imgData.data[i+2]==255) imgData.data[i+3]=0;	//converts white to transparency
-	ctx.putImageData(imgData,0,0);
-	var dataURL = canvas.toDataURL();
-	window.open(dataURL);
-	dirtyRender=1;
-	redraw();
-	return;
-}
-
 $('canvas').click(function(e){
-	var clickX = e.pageX-$(this).position().left, clickY = e.pageY-$(this).position().top;
+	var mouse=getMouse(e);
 	if(selectedCircle != -1) {selectedCircle=-1; redraw(); return;}
 	if(selectedLine != -1) {selectedLine=-1; redraw(); return;}
 	
 	for(var i=0;i<buttons.length;++i){
-		if(buttons[i].click(clickX, clickY)) return;
+		if(buttons[i].click(mouse.x, mouse.y)) return;
 	}
 	
 	var i, j, k;
-	var minD=20;
+	var minD=40;
 	for(i=0;i<allCircles.length;++i){
 		if(!allCircles[i].selectable) continue;
-		var d=dist(allCircles[i].x, allCircles[i].y, clickX, clickY);
+		var d=dist(allCircles[i].x, allCircles[i].y, mouse.x, mouse.y);
 		if (d<minD){
 			minD=d;
 			selectedCircle=allCircles[i];
@@ -190,7 +172,7 @@ $('canvas').click(function(e){
 	for(i=0;i<lines.length;++i){
 		if(!lines[i].selectable) continue;
 		for(j=0;j<2;++j){
-			var d=dist(lines[i].points[j].x, lines[i].points[j].y, clickX, clickY);
+			var d=dist(lines[i].points[j].x, lines[i].points[j].y, mouse.x, mouse.y);
 			if(d<minD){
 			minD=d;
 			selectedLine=lines[i];
@@ -199,12 +181,6 @@ $('canvas').click(function(e){
 		}
 	}
 	if(selectedLine!=-1){selectedCircle=-1;}
-});
-
-$(document).on("contextmenu", "canvas", function(e){
-   snapMode=!snapMode;
-   redraw();
-   return false;
 });
 
 function updateLocation(selected, d, a){
@@ -258,12 +234,11 @@ function updateLocation(selected, d, a){
 }
 
 $('canvas').mousemove(function(e){
-	var moveX=e.pageX-$(this).position().left,moveY=e.pageY-$(this).position().top;
-	if(moveY<30) return;
+	var mouse=getMouse(e);
 	if(selectedCircle != -1){
 		var selected=selectedCircle;
-		var a=Math.atan2(moveY-selected.owner.y,moveX-selected.owner.x);
-		var d=dist(moveX, moveY, selected.owner.x, selected.owner.y);
+		var a=Math.atan2(mouse.y-selected.owner.y,mouse.x-selected.owner.x);
+		var d=dist(mouse.x, mouse.y, selected.owner.x, selected.owner.y);
 		if(!selected.type==6 && currentCircle.children.length>2){
 			var index=currentCircle.children.indexOf(selectedCircle);
 			var splus=(index+1 >= currentCircle.children.length ? 0 : index+1),
@@ -276,20 +251,22 @@ $('canvas').mousemove(function(e){
 
 		updateLocation(selected, d, a);
 		redraw();
+		return;
 	}
 	var i, a;
 	if(selectedLine != -1){
 		var selected=selectedLine;
-		var minD=20;
+		var minD=40;
 		for(i=0;i<allCircles.length;++i){
-			var d=dist(moveX, moveY, allCircles[i].x, allCircles[i].y)-allCircles[i].r; d=Math.abs(d);
+			var d=dist(mouse.x, mouse.y, allCircles[i].x, allCircles[i].y)-allCircles[i].r; d=Math.abs(d);
 			if(d<minD){
 				minD=d;
-				a=Math.atan2(moveY-allCircles[i].y,moveX-allCircles[i].x);
+				a=Math.atan2(mouse.y-allCircles[i].y,mouse.x-allCircles[i].x);
 				selected.updatePoint(lineEnd, allCircles[i], a);
 			}
 		}
 		redraw();
+		return;
 	}
 });
 
@@ -298,10 +275,10 @@ $('canvas').mousewheel(function(event, delta, deltaX, deltaY){
 
 		var selected=selectedCircle;
 		var oldR=selected.r;
-		if (delta > 0 || deltaX>0 || deltaY>0) selected.r+=1; else selected.r-=1;
+		if (delta > 0 || deltaX>0 || deltaY>0) selected.r+=2; else selected.r-=2;
 
 		if(selected.type>=5)
-			selected.r=selected.r<9?9:selected.r;
+			selected.r=selected.r<20?20:selected.r;
 		else
 			selected.r=selected.r<mcR*0.1?mcR*0.1:selected.r;
 		
@@ -401,7 +378,7 @@ function generateWord(word){
 	redraw();
 }
 
-function createLines(){	//need to improve: more passes to reduce amount of crossing
+function createLines(){
 	var i, j, k, circle, circle2, intersection, angle;
 	var bestAngle, inter, minInter;
 	for(i=1;i<allCircles.length;++i){
@@ -474,26 +451,24 @@ function checkLines(){
 	return 1;
 }
 
-function drawGUI(){
-	for(var i=0;i<buttons.length;++i){
-		buttons[i].draw();
-	}
-	ctx.fillText("are lines correct?: "+(checkLines()?"yes":"no"),10,canvasSize-80);
-	ctx.fillText("(left click) edit mode: "+((selectedCircle==-1 && selectedLine==-1)?"no":"yes"),10,canvasSize-50);
-	ctx.fillText("(right click) will snap according to rules: "+(snapMode?"yes":"no"),10,canvasSize-20);
-}
-
-function redraw(){
-	//ctx.setTransform(1,0,0,1,0,0);	//TODO
-	ctx.lineWidth=lineWidth;
+function redraw(){	
+	ctx.setTransform(1,0,0,1, 0, 0);
 	ctx.clearRect(0,0,canvasSize,canvasSize);
+	
+	var data=scrollerObj.getValues();
+	ctx.setTransform(data.zoom,0,0,data.zoom,-data.left*canvasScale,-data.top*canvasScale);
+	
+	ctx.lineWidth=lineWidth;
 	for(var i=1;i<allCircles.length;++i){
 		allCircles[i].draw();
 	}
-	allCircles[0].draw();
+	if(allCircles.length>0) allCircles[0].draw();
+	
 	for(var i=0;i<lines.length;++i){
 		lines[i].draw();
 	}
 	if(selectedCircle!=-1 && !selectedCircle.type==6) drawAngles();
-	if(dirtyRender) {ctx.lineWidth=1; drawGUI();}
+	
+	ctx.setTransform(1,0,0,1, 0, 0);
+	if(dirtyRender) {drawGUI();}
 }
