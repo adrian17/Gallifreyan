@@ -1,6 +1,6 @@
-﻿var canvasSize = 2000.0;
-var canvasScale=canvasSize/800;
-var midPoint = canvasSize / 2;
+﻿var canvasSize=2000.0;
+var canvasScale=canvasSize/800.0;
+var midPoint=canvasSize/2.0;
 var outerR=midPoint*0.9;
 var globalR;
 var lineWidth=6.0;
@@ -188,7 +188,7 @@ function updateLocation(selected, d, a){
 	switch(selected.type){
 		case 1:
 			if(d>selected.owner.r-selected.r*0.5) d=selected.owner.r-selected.r*0.5;
-			if(d<selected.owner.r-selected.r+1+lineWidth) d=selected.owner.r-selected.r+1+lineWidth;
+			if(d<selected.owner.r-selected.r+1.5+lineWidth) d=selected.owner.r-selected.r+1.5+lineWidth;
 			break;
 		case 2:
 			if(d>selected.owner.r-selected.r-5) d=selected.owner.r-selected.r-5;
