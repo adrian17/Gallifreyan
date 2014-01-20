@@ -45,6 +45,10 @@ function prepareCanvas(){
 	
 };
 
+function resetZoom(){
+	scrollerObj.zoomTo(1);
+}
+
 function getMouse(e){
 	var mouseX = e.pageX-$('canvas').position().left, mouseY = e.pageY-$('canvas').position().top;
 	var data=scrollerObj.getValues();

@@ -47,6 +47,8 @@ $(document).ready(function(){
 });
 
 function updateText(){
+	resetZoom();
+	
 	mainCircles=[];allCircles=[];lines=[];currentCircle=0;
 	
 	var t=$('input').val().trim().toLowerCase().split(" ");
@@ -256,7 +258,7 @@ $('canvas').mousemove(function(e){
 	var i, a;
 	if(selectedLine != -1){
 		var selected=selectedLine;
-		var minD=40;
+		var minD=50;
 		for(i=0;i<allCircles.length;++i){
 			var d=dist(mouse.x, mouse.y, allCircles[i].x, allCircles[i].y)-allCircles[i].r; d=Math.abs(d);
 			if(d<minD){
@@ -372,7 +374,7 @@ function generateWord(word){
 		
 		allCircles.push(newCircle);
 	}
-	
+	redraw();
 	createLines();
 	
 	redraw();
@@ -431,8 +433,20 @@ function createLines(){
 
 				intersection=findIntersection(circle2.x, circle2.y, circle2.r, x, y, angle);
 				if(intersection==0)continue;
-				var rand=(Math.random()-0.5)*PI/6;
+				var rand=(Math.random()-0.5)*PI/4;
 				if(Math.floor(Math.random()+0.4)) {
+					//let's just check if we don't run into a white section of a circle
+					if(circle.type==1 || circle.type==3){
+						var x=circle.x+circle.r*Math.cos(angle+rand), y=circle.y+circle.r*Math.sin(angle+rand);
+						var data=ctx.getImageData(Math.floor(x), Math.floor(y), 1, 1).data;
+						if(!(data[0]!=255 && data[1]!=255 && data[2]!=255 && data[3]>0)) continue;
+					}
+					if(circle2.type==1 || circle2.type==3){
+						x=circle2.x+circle2.r*Math.cos(intersection.a-rand), y=circle2.y+circle2.r*Math.sin(intersection.a-rand);
+						data=ctx.getImageData(Math.floor(x), Math.floor(y), 1, 1).data;
+						if(!(data[0]!=255 && data[1]!=255 && data[2]!=255 && data[3]>0)) continue;
+					}
+					//nothing more to check, let's make a line there
 					lines.push(new Line(circle, angle+rand, circle2, intersection.a-rand));
 				}
 				if(circle.lines.length>=circle.nLines) break;
