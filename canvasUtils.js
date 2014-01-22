@@ -9,7 +9,7 @@ var scrollerObj = new Scroller(function(left, top, zoom) {
 	maxZoom: 10
 });
 
-var canvas, ctx, mousedown=false;
+var canvas, ctx, mousedown=false, mousemove=false;
 
 function prepareCanvas(){
 	canvas=document.getElementById("canvas");
@@ -25,18 +25,22 @@ function prepareCanvas(){
 
 	canvas.addEventListener("mousedown", function(e) {
 		scrollerObj.doTouchStart([{pageX: e.pageX,pageY: e.pageY}], e.timeStamp);
+		mousemove=false;
 		mousedown = true;
 		redraw();
 	}, false);
 
 	canvas.addEventListener("mousemove", function(e) {
+		mousemove=true;
 		if (!mousedown) {return;}
 		scrollerObj.doTouchMove([{pageX: e.pageX,pageY: e.pageY}], e.timeStamp);
-		mousedown = true;
 		redraw();
 	}, false);
 
 	canvas.addEventListener("mouseup", function(e) {
+		if(!mousemove) { //it was a click
+			doClick(e);
+		}
 		if (!mousedown) {return;}
 		scrollerObj.doTouchEnd(e.timeStamp);
 		mousedown = false;

@@ -150,7 +150,7 @@ function BigCircle(owner,type,subtype, d, r, a){
 	this.update(d, a);
 }
 
-$('canvas').click(function(e){
+function doClick(e){
 	var mouse=getMouse(e);
 	if(selectedCircle != -1) {selectedCircle=-1; redraw(); return;}
 	if(selectedLine != -1) {selectedLine=-1; redraw(); return;}
@@ -183,7 +183,7 @@ $('canvas').click(function(e){
 		}
 	}
 	if(selectedLine!=-1){selectedCircle=-1;}
-});
+};
 
 function updateLocation(selected, d, a){
 	if(!snapMode) {selected.update(d, a); return;}
