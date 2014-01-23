@@ -1,9 +1,9 @@
-﻿var canvasSize=2000.0;
+﻿var canvasSize=1000.0;
 var canvasScale=canvasSize/800.0;
 var midPoint=canvasSize/2.0;
 var outerR=midPoint*0.9;
 var globalR;
-var lineWidth=6.0;
+var lineWidth=2.5*canvasScale;
 var mcR=midPoint*0.60;
 var PI=Math.PI;
 
@@ -78,8 +78,8 @@ function Line(circle1, a1, circle2, a2){
 		ctx.beginPath(); ctx.moveTo(this.points[0].x, this.points[0].y); ctx.lineTo(this.points[1].x, this.points[1].y); ctx.stroke();
 		ctx.strokeStyle="black"; 
 		if(dirtyRender && this.selectable){ctx.fillStyle="red"; 
-						ctx.beginPath(); ctx.arc(this.points[0].x,this.points[0].y,6,0,PI*2);ctx.fill();
-						ctx.beginPath(); ctx.arc(this.points[1].x,this.points[1].y,6,0,PI*2);ctx.fill();
+						ctx.beginPath(); ctx.arc(this.points[0].x,this.points[0].y,lineWidth,0,PI*2);ctx.fill();
+						ctx.beginPath(); ctx.arc(this.points[1].x,this.points[1].y,lineWidth,0,PI*2);ctx.fill();
 		}
 	}
 	this.update=function(){
@@ -129,7 +129,7 @@ function BigCircle(owner,type,subtype, d, r, a){
 			}
 		}
 		ctx.strokeStyle="black"; 
-		if(dirtyRender && this.selectable){ctx.beginPath(); ctx.arc(this.x,this.y,6,0,PI*2);ctx.fillStyle="red"; ctx.fill();}
+		if(dirtyRender && this.selectable){ctx.beginPath(); ctx.arc(this.x,this.y,lineWidth,0,PI*2);ctx.fillStyle="red"; ctx.fill();}
 	}
 	this.update=function(d, a){
 		var dx, dy;

@@ -6,7 +6,8 @@ function Button(x, y, width, text, f){
 		ctx.fillStyle="black";
 		ctx.strokeStyle="black";
 		ctx.beginPath();ctx.rect(this.x, this.y, this.width, this.height);ctx.stroke();
-		ctx.font="50px Georgia"; ctx.fillText(text,this.x+20,this.y+this.height-20);
+		ctx.font=String(Math.floor(20*canvasScale))+"px Georgia";
+		ctx.fillText(text,this.x+8*canvasScale,this.y+this.height-8*canvasScale);
 		ctx.lineWidth=temp;
 	}
 	this.click=function(e){
@@ -18,20 +19,20 @@ function Button(x, y, width, text, f){
 		}
 		else return 0;
 	}
-	this.x=x-0.5;
-	this.y=y-0.5;
-	this.width=width;
-	this.height=80;
+	this.x=x*canvasScale-0.5;
+	this.y=y*canvasScale-0.5;
+	this.width=width*canvasScale;
+	this.height=30*canvasScale;
 	this.text=text;
 	this.f=f;
 }
 
 function createGUI(){
-	buttons.push(new Button(0, 0, 140, "save", function(){createFinalImage();}));
-	buttons.push(new Button(140, 0, 80, "+", 
+	buttons.push(new Button(0, 0, 60, "save", function(){createFinalImage();}));
+	buttons.push(new Button(60, 0, 30, "+", 
 		function(){lineWidth+=0.5; redraw();}
 	));
-	buttons.push(new Button(220, 0, 80, "-", 
+	buttons.push(new Button(90, 0, 30, "-", 
 		function(){lineWidth-=0.5;if(lineWidth<0.5)lineWidth=0.5; redraw();}
 	));
 }
@@ -40,7 +41,7 @@ function drawGUI(){
 	for(var i=0;i<buttons.length;++i){
 		buttons[i].draw();
 	}
-	ctx.fillText("are lines correct?: "+(checkLines()?"yes":"no"),10,canvasSize-150);
-	ctx.fillText("(left click) edit mode: "+((selectedCircle==-1 && selectedLine==-1)?"no":"yes"),10,canvasSize-90);
-	ctx.fillText("(right click) will snap according to rules: "+(snapMode?"yes":"no"),10,canvasSize-30);
+	ctx.fillText("are lines correct?: "+(checkLines()?"yes":"no"),10,canvasSize-60*canvasScale);
+	ctx.fillText("(left click) edit mode: "+((selectedCircle==-1 && selectedLine==-1)?"no":"yes"),10,canvasSize-35*canvasScale);
+	ctx.fillText("(right click) will snap according to rules: "+(snapMode?"yes":"no"),10,canvasSize-10*canvasScale);
 }
