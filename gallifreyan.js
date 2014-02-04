@@ -122,8 +122,8 @@ function BigCircle(owner,type,subtype, d, r, a){
 		{
 			if(this.subtype==2 || this.subtype==3){		//DOTS
 				var dotR, r, delta;
-				for(var i=1;i<this.subtype+1;i++){
-					dotR=4+lineWidth/2, r=this.r-3*dotR, delta=(globalR/this.r)*i/3;
+				for(var i=-1;i<this.subtype-1;i++){
+					dotR=3+lineWidth/2, r=this.r-3*dotR, delta=(globalR/this.r)*i;
 					ctx.beginPath();ctx.arc(this.x-Math.cos(this.a+delta)*r,this.y-Math.sin(this.a+delta)*r,dotR,0,PI*2);ctx.fillStyle="black"; ctx.fill();
 				}
 			}
