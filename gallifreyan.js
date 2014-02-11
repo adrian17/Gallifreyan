@@ -97,7 +97,7 @@ function Line(circle1, a1, circle2, a2){
 	this.update();
 }
 
-function BigCircle(owner,type,subtype, d, r, a){
+function Circle(owner,type,subtype, d, r, a){
 	this.draw = function(){
 		if(selectedCircle==this) ctx.strokeStyle="grey"; 
 		if(this.type==3 || this.type==1){
@@ -304,7 +304,7 @@ function drawAngles(){
 }
 
 function generateWords(words){
-	allCircles.push(new BigCircle({x:midPoint, y:midPoint, a:0}, 4,0,0, outerR, 0));
+	allCircles.push(new Circle({x:midPoint, y:midPoint, a:0}, 4,0,0, outerR, 0));
 	allCircles[0].selectable=false;
 	
 	var delta=2*PI/words.length;
@@ -343,7 +343,7 @@ function generateWord(word, mcR, dist, mainAngle){
 	var i;
 	var owner, newCircle;
 	
-	var newMainCircle = new BigCircle(allCircles[0], 2,0,dist, mcR, mainAngle);
+	var newMainCircle = new Circle(allCircles[0], 2,0,dist, mcR, mainAngle);
 	
 	mainCircles.push(newMainCircle);
 	allCircles.push(newMainCircle);
@@ -361,19 +361,19 @@ function generateWord(word, mcR, dist, mainAngle){
 		var nLines=[0, 0, 0, 3, 1, 2][subtype-1];
 		if(letter.match("^(b|ch|d|f|g|h)$")){
 			type=1,r=globalR,d=mcR-r+1;
-			newCircle = new BigCircle(owner,type,subtype, d, r, angle);
+			newCircle = new Circle(owner,type,subtype, d, r, angle);
 		}
 		if(letter.match("^(j|k|l|m|n|p)$")){
 			type=2,r=globalR,d=mcR-r-5;
-			newCircle = new BigCircle(owner,type,subtype, d, r, angle);
+			newCircle = new Circle(owner,type,subtype, d, r, angle);
 		}
 		if(letter.match("^(t|sh|r|s|v|w)$")){
 			type=3,r=globalR*1.3,d=mcR*1.1;
-			newCircle = new BigCircle(owner,type,subtype, d, r, angle);
+			newCircle = new Circle(owner,type,subtype, d, r, angle);
 		}
 		if(letter.match("^(th|y|z|ng|qu|x)$")){
 			type=4,r=globalR,d=mcR;
-			newCircle = new BigCircle(owner,type,subtype, d, r, angle);
+			newCircle = new Circle(owner,type,subtype, d, r, angle);
 		}
 		if(letter.match("(a|e|i|o|u)")){
 			nLines=[0, 0, 1, 0, 1][subtype-1];
@@ -383,12 +383,12 @@ function generateWord(word, mcR, dist, mainAngle){
 				type=6;
 				owner=previous;
 				angle=previous.a;
-				newCircle=new BigCircle(owner, type, subtype, owner.r/2, r, owner.a+PI+PI/8);
+				newCircle=new Circle(owner, type, subtype, owner.r/2, r, owner.a+PI+PI/8);
 				if([2, 3, 5].contains(subtype)) newCircle.selectable=false;
 			}
 			else{
 				type=5, d=mcR;
-				newCircle=new BigCircle(owner, type, subtype,owner.r, r, angle);
+				newCircle=new Circle(owner, type, subtype,owner.r, r, angle);
 			}
 		}
 		newCircle.nLines=nLines;
