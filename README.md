@@ -15,10 +15,16 @@ You can find specific info about the alphabet here: http://www.shermansplanet.co
 
 
 TODO:
+
+features:
 - doubled vowels/consonants
 - manual addition/deletion of lines
 - manually detach/reattach merged circles
 ...
-- multiple words
 - support for punctuation, numbers?
-- remember the state if only one of the words was changed?
+- remember the state after changing the text if only some words were changed?
+
+enhancements:
+- make line creation algorithm smarter
+- make arranging words prettier
+- overall tweaks for the generation code, especially sizes

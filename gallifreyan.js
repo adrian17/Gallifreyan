@@ -4,7 +4,6 @@ var midPoint=canvasSize/2.0;
 var outerR=midPoint*0.9;
 var globalR;
 var lineWidth=2.5*canvasScale;
-var mcR=midPoint*0.60;
 var PI=Math.PI;
 
 var allCircles=[],
@@ -63,13 +62,7 @@ function updateText(){
 			else w[j].push(toParse[i]);
 		}
 	}
-	word=w[0];//TODO: multiple words
-	wordL=0;
-	for(var i=0;i<word.length;i++){
-		if(i>0 && word[i].match("(a|e|i|o|u)") && !(word[i-1].match("(a|e|i|o|u)"))) continue;
-		wordL++;
-	}
-	generateWord(word);
+	generateWords(w);
 }
 
 function Line(circle1, a1, circle2, a2){
@@ -109,8 +102,8 @@ function BigCircle(owner,type,subtype, d, r, a){
 		if(selectedCircle==this) ctx.strokeStyle="grey"; 
 		if(this.type==3 || this.type==1){
 			var d, an;
-			d=dist(this.x, this.y, midPoint, midPoint);
-			an=Math.acos((mcR*mcR-d*d-this.r*this.r)/(-2*d*this.r));an=(PI/2-an)
+			d=dist(this.x, this.y, this.owner.x, this.owner.y);
+			an=Math.acos((this.owner.r*this.owner.r-d*d-this.r*this.r)/(-2*d*this.r));an=(PI/2-an)
 			ctx.beginPath(); ctx.arc(this.x,this.y,this.r-lineWidth/2,0,PI*2);ctx.fillStyle="white"; ctx.fill();
 			ctx.beginPath(); ctx.arc(this.x,this.y,this.r,this.a+PI/2+an,this.a+3/2*PI-an);ctx.stroke();
 		}
@@ -136,9 +129,13 @@ function BigCircle(owner,type,subtype, d, r, a){
 		var oldA=this.a;
 		dx=Math.cos(a)*(d), dy=Math.sin(a)*(d);
 		this.x=this.owner.x+dx;this.y=this.owner.y+dy;this.a=a;this.d=d;
-		for(i=0;i<this.children.length;i++)
-			this.children[i].update(this.children[i].d, this.children[i].a-oldA+this.a);
-		for(i=0;i<this.lines.length;i++)
+		for(var i=0;i<this.children.length;i++){
+			if(mainCircles.contains(this))
+				this.children[i].update(this.children[i].d, this.children[i].a);
+			else
+				this.children[i].update(this.children[i].d, this.children[i].a-oldA+this.a);
+		}
+		for(var i=0;i<this.lines.length;i++)
 			this.lines[i].update();
 	}
 	this.owner=owner;
@@ -194,7 +191,6 @@ function updateLocation(selected, d, a){
 			break;
 		case 2:
 			if(d>selected.owner.r-selected.r-5) d=selected.owner.r-selected.r-5;
-			if(d<selected.r) d=selected.r;
 			break;
 		case 3:
 			if(d>selected.owner.r+selected.r*0.8) d=selected.owner.r+selected.r*0.8;
@@ -232,7 +228,7 @@ function updateLocation(selected, d, a){
 			}break;
 	}
 	selected.update(d, a);
-	for(i=0;i<selected.children.length;i++) updateLocation(selected.children[i], selected.children[i].d, selected.children[i].a);
+	for(var i=0;i<selected.children.length;i++) updateLocation(selected.children[i], selected.children[i].d, selected.children[i].a);
 }
 
 $('canvas').mousemove(function(e){
@@ -241,7 +237,7 @@ $('canvas').mousemove(function(e){
 		var selected=selectedCircle;
 		var a=Math.atan2(mouse.y-selected.owner.y,mouse.x-selected.owner.x);
 		var d=dist(mouse.x, mouse.y, selected.owner.x, selected.owner.y);
-		if(selected.type!=6 && currentCircle.children.length>2){
+		if(selected.type!=6 && currentCircle.children.length>2){	//need extra logic to enforce location of first word/letter
 			var index=currentCircle.children.indexOf(selectedCircle);
 			var splus=(index+1 >= currentCircle.children.length ? 0 : index+1),
 				sminus=(index-1 < 0 ? currentCircle.children.length-1 : index-1);	//preserves order
@@ -250,7 +246,6 @@ $('canvas').mousemove(function(e){
 			if(aplus>aminus) {a>0?aminus+=2*PI:aplus-=2*PI;}	//still buggy
 			if(a<aplus) a=aplus;else if(a>aminus) a=aminus;
 		}
-
 		updateLocation(selected, d, a);
 		redraw();
 		return;
@@ -282,9 +277,12 @@ $('canvas').mousewheel(function(event, delta, deltaX, deltaY){
 		if(selected.type>=5)
 			selected.r=selected.r<20?20:selected.r;
 		else
-			selected.r=selected.r<mcR*0.1?mcR*0.1:selected.r;
+			selected.r=selected.r<selected.owner.r*0.1?selected.owner.r*0.1:selected.r;
 		
-		for(i=0;i<selected.children.length;i++) selected.children[i].update(selected.children[i].d-oldR+selected.r, selected.children[i].a);
+		for(i=0;i<selected.children.length;i++){
+			selected.children[i].r *= (selected.r/oldR);
+			selected.children[i].update(selected.children[i].d*(selected.r/oldR), selected.children[i].a);
+		}
 		updateLocation(selected, selected.d, selected.a);
 		redraw();
 	}
@@ -292,15 +290,43 @@ $('canvas').mousewheel(function(event, delta, deltaX, deltaY){
 });
 
 function drawAngles(){
+	if(currentCircle.children.length<3) return;
+	var len=selectedCircle.owner.r*1.3;
 	var index=currentCircle.children.indexOf(selectedCircle);
 	var splus=(index+1 >= currentCircle.children.length ? 0 : index+1),
 		sminus=(index-1 < 0 ? currentCircle.children.length-1 : index-1);	//preserves order
 	ctx.strokeStyle="red";
-	ctx.beginPath(); ctx.moveTo(midPoint,midPoint);
-	ctx.lineTo(midPoint+Math.cos(currentCircle.children[splus].a)*(mcR*1.3), midPoint+Math.sin(currentCircle.children[splus].a)*(mcR*1.3));
-	ctx.moveTo(midPoint,midPoint);
-	ctx.lineTo(midPoint+Math.cos(currentCircle.children[sminus].a)*(mcR*1.3), midPoint+Math.sin(currentCircle.children[sminus].a)*(mcR*1.3));ctx.stroke();
+	ctx.beginPath(); ctx.moveTo(currentCircle.x,currentCircle.y);
+	ctx.lineTo(currentCircle.x+Math.cos(currentCircle.children[splus].a)*(len), currentCircle.y+Math.sin(currentCircle.children[splus].a)*(len));
+	ctx.moveTo(currentCircle.x,currentCircle.y);
+	ctx.lineTo(currentCircle.x+Math.cos(currentCircle.children[sminus].a)*(len), currentCircle.y+Math.sin(currentCircle.children[sminus].a)*(len));ctx.stroke();
 	ctx.strokeStyle="black";
+}
+
+function generateWords(words){
+	allCircles.push(new BigCircle({x:midPoint, y:midPoint, a:0}, 4,0,0, outerR, 0));
+	allCircles[0].selectable=false;
+	
+	var delta=2*PI/words.length;
+	var angle=PI/2;
+	var r = words.length==1 ? outerR*0.8 : 1.7*outerR/(words.length+2);
+	var d = words.length==1 ? 0 : outerR-r*1.2;
+	
+	for(var i=0;i<words.length;i++){
+		if(i>0)angle-=delta;if(angle<-PI) angle+=2*PI;
+		
+		word=words[i];
+		wordL=0;
+		for(var j=0;j<word.length;j++){
+			if(j>0 && word[j].match("(a|e|i|o|u)") && !(word[j-1].match("(a|e|i|o|u)"))) continue;
+			wordL++;
+		}
+		generateWord(word, r, d, angle)
+	}
+	redraw();
+	createLines();
+	
+	redraw();
 }
 
 var map={"b":1,"ch":2,"d":3,"f":4,"g":5,"h":6,
@@ -309,7 +335,7 @@ var map={"b":1,"ch":2,"d":3,"f":4,"g":5,"h":6,
 		"th":1,"y":2,"z":3,"nq":4,"qu":5,"x":6,
 		"a":1,"e":2,"i":3,"o":4,"u":5};
 
-function generateWord(word){
+function generateWord(word, mcR, dist, mainAngle){
 	var delta=2*PI/wordL;
 	var angle=PI/2;
 	globalR=1.8*mcR/(wordL+2);
@@ -317,14 +343,11 @@ function generateWord(word){
 	var i;
 	var owner, newCircle;
 	
-	allCircles.push(new BigCircle({x:midPoint, y:midPoint, a:0}, 4,0,0, outerR, 0));
-	allCircles[0].selectable=false;
-	
-	var newMainCircle = new BigCircle({x:midPoint, y:midPoint, a:0}, 4,0,0, mcR, 0);
-	newMainCircle.selectable=false;		//don't select mainCircles for now
+	var newMainCircle = new BigCircle(allCircles[0], 2,0,dist, mcR, mainAngle);
 	
 	mainCircles.push(newMainCircle);
 	allCircles.push(newMainCircle);
+	allCircles[0].children.push(newMainCircle);
 	
 	for(var i=0;i<word.length;i++)
 	{
@@ -374,10 +397,6 @@ function generateWord(word){
 		
 		allCircles.push(newCircle);
 	}
-	redraw();
-	createLines();
-	
-	redraw();
 }
 
 function createLines(){
