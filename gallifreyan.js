@@ -3,7 +3,7 @@ var canvasScale=canvasSize/800.0;
 var midPoint=canvasSize/2.0;
 var outerR=midPoint*0.9;
 var globalR;
-var lineWidth=2.5*canvasScale;
+var lineWidth=3.0*canvasScale;
 var PI=Math.PI;
 
 var allCircles=[],
@@ -116,7 +116,7 @@ function Circle(owner,type,subtype, d, r, a){
 			if(this.subtype==2 || this.subtype==3){		//DOTS
 				var dotR, r, delta;
 				for(var i=-1;i<this.subtype-1;i++){
-					dotR=3+lineWidth/2, r=this.r-3*dotR, delta=(globalR/this.r)*i;
+					dotR=3+lineWidth/2, r=this.r-3*dotR, delta=(0.2*this.owner.r/this.r)*i;
 					ctx.beginPath();ctx.arc(this.x-Math.cos(this.a+delta)*r,this.y-Math.sin(this.a+delta)*r,dotR,0,PI*2);ctx.fillStyle="black"; ctx.fill();
 				}
 			}
@@ -275,7 +275,7 @@ $('canvas').mousewheel(function(event, delta, deltaX, deltaY){
 		if (delta > 0 || deltaX>0 || deltaY>0) selected.r+=2; else selected.r-=2;
 
 		if(selected.type>=5)
-			selected.r=selected.r<20?20:selected.r;
+			selected.r=selected.r<10?10:selected.r;
 		else
 			selected.r=selected.r<selected.owner.r*0.1?selected.owner.r*0.1:selected.r;
 		
@@ -377,16 +377,24 @@ function generateWord(word, mcR, dist, mainAngle){
 		}
 		if(letter.match("(a|e|i|o|u)")){
 			nLines=[0, 0, 1, 0, 1][subtype-1];
-			r=mcR*0.05;
 			var previous=owner.children[owner.children.length-1];
-			if(i!=0 && previous.type<5 && previous.children.length==0){
+			r=previous.r*0.25;
+			
+			if(subtype!=4 && previous.type==3){	//let's not attach to this as floating letters look ugly
+				type=5, d=mcR;
+				console.log(1);
+				angle+=delta/2;
+				newCircle=new Circle(owner, type, subtype,owner.r, r, angle);
+				angle+=delta/2;
+			}
+			else if(i!=0 && previous.type<5 && previous.children.length==0){	//are we free to attach?
 				type=6;
 				owner=previous;
-				angle=previous.a;
+				angle+=delta;
 				newCircle=new Circle(owner, type, subtype, owner.r/2, r, owner.a+PI+PI/8);
 				if([2, 3, 5].contains(subtype)) newCircle.selectable=false;
 			}
-			else{
+			else{	//let's just add this normally then.
 				type=5, d=mcR;
 				newCircle=new Circle(owner, type, subtype,owner.r, r, angle);
 			}
