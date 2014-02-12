@@ -77,7 +77,7 @@ function createFinalImage(){
 	redraw();
 	var imgData=ctx.getImageData(0,0,canvasSize,canvasSize);
 	for (var i=0;i<imgData.data.length;i+=4)
-		if(imgData.data[i]==255 && imgData.data[i+1]==255 && imgData.data[i+2]==255) imgData.data[i+3]=0;	//converts white to transparency
+		if(imgData.data[i]>64 && imgData.data[i+1]>64 && imgData.data[i+2]>64) imgData.data[i+3]=0;	//converts white to transparency
 	ctx.putImageData(imgData,0,0);
 	var dataURL = canvas.toDataURL();
 	window.open(dataURL);
