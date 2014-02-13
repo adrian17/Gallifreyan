@@ -378,16 +378,15 @@ function generateWord(word, mcR, dist, mainAngle){
 		if(letter.match("(a|e|i|o|u)")){
 			nLines=[0, 0, 1, 0, 1][subtype-1];
 			var previous=owner.children[owner.children.length-1];
-			r=previous.r*0.25;
+			r=globalR*0.25;
 			
-			if(subtype!=4 && previous.type==3){	//let's not attach to this as floating letters look ugly
+			if(previous && subtype!=4 && previous.type==3){	//let's not attach to this as floating letters look ugly
 				type=5, d=mcR;
-				console.log(1);
 				angle+=delta/2;
 				newCircle=new Circle(owner, type, subtype,owner.r, r, angle);
 				angle+=delta/2;
 			}
-			else if(i!=0 && previous.type<5 && previous.children.length==0){	//are we free to attach?
+			else if(previous && i!=0 && previous.type<5 && previous.children.length==0){	//are we free to attach?
 				type=6;
 				owner=previous;
 				angle+=delta;
