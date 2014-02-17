@@ -20,6 +20,8 @@ function prepareCanvas(){
 	canvas.style.height="800px";
 	ctx=canvas.getContext("2d");
 	
+	ctx.lineCap = 'round';
+	
 	scrollerObj.setDimensions(800, 800, 800, 800);	//I'm almost certain that I'm doing this the wrong way, but somehow it works flawlessly
 	scrollerObj.setPosition($('canvas').position().left, $('canvas').position().top);
 

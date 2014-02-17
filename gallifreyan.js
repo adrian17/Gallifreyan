@@ -100,25 +100,37 @@ function Line(circle1, a1, circle2, a2){
 function Circle(owner,type,subtype, d, r, a){
 	this.draw = function(){
 		if(selectedCircle==this) ctx.strokeStyle="grey"; 
-		if(this.type==3 || this.type==1){
+		
+		if(mainCircles.contains(this)){			//it's a mainCircle so we need to make a gap for B- and T- row letters
+			var angles=[];						//a list of intersections with these letters
+			for(var i=0;i<this.children.length;++i){
+				var child=this.children[i];
+				if(child.type==3 || child.type==1){
+					var d, an;
+					d=dist(this.x, this.y, child.x, child.y);
+					an=Math.acos((child.r*child.r-d*d-this.r*this.r)/(-2*d*this.r));
+					angles.push(child.a+an, child.a-an);
+				}
+			}
+			for(var i=angles.length;i>0;i-=2){	//we're going in the oppposite direction as that's how arc() draws
+				ctx.beginPath(); ctx.arc(this.x,this.y,this.r,angles[i%angles.length],angles[i-1]);ctx.stroke();
+			}
+		}
+		else if(this.type==3 || this.type==1){		//so it's not a mainCircle; not let's check if it's a B- or T- row letter
 			var d, an;
 			d=dist(this.x, this.y, this.owner.x, this.owner.y);
 			an=Math.acos((this.owner.r*this.owner.r-d*d-this.r*this.r)/(-2*d*this.r));an=(PI/2-an)
-			ctx.beginPath(); ctx.arc(this.x,this.y,this.r-lineWidth/2,0,PI*2);ctx.fillStyle="white"; ctx.fill();
 			ctx.beginPath(); ctx.arc(this.x,this.y,this.r,this.a+PI/2+an,this.a+3/2*PI-an);ctx.stroke();
 		}
-		else{
+		else{										//if not, we can just draw a circle there
 			ctx.beginPath(); ctx.arc(this.x,this.y,this.r,0,2*PI); ctx.stroke();
 		}
 		
-		if(this.type<5)
-		{
-			if(this.subtype==2 || this.subtype==3){		//DOTS
-				var dotR, r, delta;
-				for(var i=-1;i<this.subtype-1;i++){
-					dotR=3+lineWidth/2, r=this.r-3*dotR, delta=(0.2*this.owner.r/this.r)*i;
-					ctx.beginPath();ctx.arc(this.x-Math.cos(this.a+delta)*r,this.y-Math.sin(this.a+delta)*r,dotR,0,PI*2);ctx.fillStyle="black"; ctx.fill();
-				}
+		if(this.type<5 && (this.subtype==2 || this.subtype==3)){	//drawing the dots
+			var dotR, r, delta;
+			for(var i=-1;i<this.subtype-1;i++){
+				dotR=3+lineWidth/2, r=this.r-3*dotR, delta=(0.2*this.owner.r/this.r)*i;
+				ctx.beginPath();ctx.arc(this.x-Math.cos(this.a+delta)*r,this.y-Math.sin(this.a+delta)*r,dotR,0,PI*2);ctx.fillStyle="black"; ctx.fill();
 			}
 		}
 		ctx.strokeStyle="black"; 
