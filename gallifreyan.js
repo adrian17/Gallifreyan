@@ -1,25 +1,21 @@
-﻿var canvasSize=1000.0;
-var canvasScale=canvasSize/800.0;
-var midPoint=canvasSize/2.0;
-var outerR=midPoint*0.9;
-var globalR;
+﻿var canvasSize=1000.0;				//the image resolution in pixels
+var canvasScale=canvasSize/800.0;	//800=the canvas size on the screen
+var midPoint=canvasSize/2.0;		//the (x, y) of the centerpoint
+var outerR=midPoint*0.9;			//radius of the outermost circle
 var lineWidth=3.0*canvasScale;
 var PI=Math.PI;
 
 var allCircles=[],
 	mainCircles=[],
-	currentCircle,	//points to a mainCircle which contains selectedCircle
-	selectedCircle=-1, //points to selected circle
-	snapMode=true;	//can't be disabled for now
+	currentCircle,		//points to a mainCircle which contains selectedCircle
+	selectedCircle=-1, 	//points to selected circle
+	snapMode=true;		//disabling this disables some rule checking; can't be toggled for now
 
 var lines=[],
-	selectedLine=-1,
-	lineEnd=0;
+	selectedLine=-1,	//points to selected line
+	lineEnd=0;			//tells which end of the line is selected
 
-var dirtyRender=1;
-
-var word,
-	wordL;	//final number of circles around the mainCircle
+var dirtyRender=true;		//whether GUI and red dots will be drawn
 
 Array.prototype.contains = function(k){
     for(var p in this)
@@ -45,6 +41,7 @@ $(document).ready(function(){
 	redraw();
 });
 
+//resets everything and parses the text
 function updateText(){
 	resetZoom();
 	
@@ -65,6 +62,8 @@ function updateText(){
 	generateWords(w);
 }
 
+//a line is always defined be the circles it is connected to and angles in relation to these circles.
+//thus, it will always be connected to the circles' borders.
 function Line(circle1, a1, circle2, a2){
 	this.draw=function(){
 		if(selectedLine==this) ctx.strokeStyle="grey"; 
@@ -97,6 +96,13 @@ function Line(circle1, a1, circle2, a2){
 	this.update();
 }
 
+//every circle or arc you can see is of this class.
+//every circles has:
+//an owner - the location is always calculated in relation to its owner's position and angle
+//a type - which corresponds to the row of the alphabet
+//a subtype - which corresponds to the column of the alphabet
+//if the letter is a vowel, then type=5 (when it's a standalone letter) or 6 (when it's connected to a consonant)
+//a list of other circles and lines connected to it, so they can easily updated in a cascading style
 function Circle(owner,type,subtype, d, r, a){
 	this.draw = function(){
 		if(selectedCircle==this) ctx.strokeStyle="grey"; 
@@ -137,7 +143,7 @@ function Circle(owner,type,subtype, d, r, a){
 		ctx.strokeStyle="black"; 
 		if(dirtyRender && this.selectable){ctx.beginPath(); ctx.arc(this.x,this.y,lineWidth,0,PI*2);ctx.fillStyle="red"; ctx.fill();}
 	}
-	this.update=function(d, a){
+	this.update=function(d, a){		//recalculates the position, forces other circles/lines connected to it to update too
 		var dx, dy;
 		var oldA=this.a;
 		dx=Math.cos(a)*(d), dy=Math.sin(a)*(d);
@@ -155,12 +161,14 @@ function Circle(owner,type,subtype, d, r, a){
 	this.owner=owner;
 	this.children=[];
 	this.type=type; this.subtype=subtype;
-	this.nLines=0; this.lines=[];
+	this.nLines=0;		//expected number of lines, according to rules
+	this.lines=[];
 	this.selectable=true;
 	this.r = r;
 	this.update(d, a);
 }
 
+//selects the circle/line. Checks whether any buttons are pressed.
 function doClick(e){
 	var mouse=getMouse(e);
 	if(selectedCircle != -1) {selectedCircle=-1; redraw(); return;}
@@ -196,6 +204,7 @@ function doClick(e){
 	if(selectedLine!=-1){selectedCircle=-1;}
 };
 
+//makes sure that the correct distance from the base circle is kept according to language rules
 function updateLocation(selected, d, a){
 	if(!snapMode) {selected.update(d, a); return;}
 	switch(selected.type){
@@ -245,6 +254,7 @@ function updateLocation(selected, d, a){
 	for(var i=0;i<selected.children.length;i++) updateLocation(selected.children[i], selected.children[i].d, selected.children[i].a);
 }
 
+//manages the movement of circles and lines. In case of circles, updateLocation() is called to enforce language rules
 $('canvas').mousemove(function(e){
 	var mouse=getMouse(e);
 	if(selectedCircle != -1){
@@ -283,6 +293,7 @@ $('canvas').mousemove(function(e){
 	}
 });
 
+//changes the circle's radius
 $('canvas').mousewheel(function(event, delta, deltaX, deltaY){
 	if(selectedCircle != -1){
 
@@ -305,6 +316,7 @@ $('canvas').mousewheel(function(event, delta, deltaX, deltaY){
 	return false;
 });
 
+//draws red lines to signify the min/max angles that the circle can move within
 function drawAngles(){
 	if(currentCircle.children.length<3) return;
 	var len=selectedCircle.owner.r*1.3;
@@ -319,6 +331,7 @@ function drawAngles(){
 	ctx.strokeStyle="black";
 }
 
+//generates the sentence
 function generateWords(words){
 	allCircles.push(new Circle({x:midPoint, y:midPoint, a:0}, 4,0,0, outerR, 0));
 	allCircles[0].selectable=false;
@@ -331,30 +344,31 @@ function generateWords(words){
 	for(var i=0;i<words.length;i++){
 		if(i>0)angle-=delta;if(angle<-PI) angle+=2*PI;
 		
-		word=words[i];
-		wordL=0;
+		var word=words[i];
+		var wordL=0;	//approximates the number of letters, taking into account that some will be merged
 		for(var j=0;j<word.length;j++){
 			if(j>0 && word[j].match("(a|e|i|o|u)") && !(word[j-1].match("(a|e|i|o|u)"))) continue;
 			wordL++;
 		}
-		generateWord(word, r, d, angle)
+		generateWord(word, wordL, r, d, angle)
 	}
-	redraw();
 	createLines();
 	
 	redraw();
 }
 
+//assigns the subtype
 var map={"b":1,"ch":2,"d":3,"f":4,"g":5,"h":6,
 		"j":1,"k":2,"l":3,"m":4,"n":5,"p":6,
 		"t":1,"sh":2,"r":3,"s":4,"v":5,"w":6,
 		"th":1,"y":2,"z":3,"nq":4,"qu":5,"x":6,
 		"a":1,"e":2,"i":3,"o":4,"u":5};
 
-function generateWord(word, mcR, dist, mainAngle){
+//generates a single word
+function generateWord(word, wordL, mcR, dist, mainAngle){
 	var delta=2*PI/wordL;
 	var angle=PI/2;
-	globalR=1.8*mcR/(wordL+2);
+	var globalR=1.8*mcR/(wordL+2);
 	
 	var i;
 	var owner, newCircle;
@@ -422,6 +436,7 @@ function generateWord(word, mcR, dist, mainAngle){
 	}
 }
 
+//generates the lines after all the circles are created
 function createLines(){
 	var i, j, k, circle, circle2, intersection, angle;
 	var bestAngle, inter, minInter;
@@ -499,6 +514,7 @@ function createLines(){
 	}
 }
 
+//checks whether all the circles have a correct amount of lines connected
 function checkLines(){
 	for(var i=1;i<allCircles.length;++i){	//we don't check the first circle
 		if(mainCircles.indexOf(allCircles[i])!=-1) continue;	//also skip mainCircles
@@ -507,10 +523,11 @@ function checkLines(){
 	return 1;
 }
 
+//the core drawing routine
 function redraw(){	
 	ctx.setTransform(1,0,0,1, 0, 0);
 	ctx.clearRect(0,0,canvasSize,canvasSize);
-	
+
 	var data=scrollerObj.getValues();
 	ctx.setTransform(data.zoom,0,0,data.zoom,-data.left*canvasScale,-data.top*canvasScale);
 	
