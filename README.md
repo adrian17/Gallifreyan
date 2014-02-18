@@ -16,6 +16,10 @@ You can find specific info about the alphabet here: http://www.shermansplanet.co
 
 TODO:
 
+fixes:
+- the part that limits angles in order to preserve letter/word order bugs out in rare cases
+- the same with the word circle drawing, it's even more important as it makes it impossible to make overlapping letters
+
 features:
 - doubled vowels/consonants
 - manual addition/deletion of lines

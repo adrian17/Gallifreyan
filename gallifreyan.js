@@ -112,6 +112,7 @@ function Circle(owner,type,subtype, d, r, a){
 					angles.push(child.a+an, child.a-an);
 				}
 			}
+			if(angles.length==0) angles=[0, 2*PI];
 			for(var i=angles.length;i>0;i-=2){	//we're going in the oppposite direction as that's how arc() draws
 				ctx.beginPath(); ctx.arc(this.x,this.y,this.r,angles[i%angles.length],angles[i-1]);ctx.stroke();
 			}
@@ -140,7 +141,8 @@ function Circle(owner,type,subtype, d, r, a){
 		var dx, dy;
 		var oldA=this.a;
 		dx=Math.cos(a)*(d), dy=Math.sin(a)*(d);
-		this.x=this.owner.x+dx;this.y=this.owner.y+dy;this.a=a;this.d=d;
+		this.x=this.owner.x+dx;this.y=this.owner.y+dy;this.d=d;
+		if(a<-PI) this.a=a+2*PI; else if(a>PI) this.a=a-2*PI; else this.a=a;
 		for(var i=0;i<this.children.length;i++){
 			if(mainCircles.contains(this))
 				this.children[i].update(this.children[i].d, this.children[i].a);
@@ -248,14 +250,16 @@ $('canvas').mousemove(function(e){
 	if(selectedCircle != -1){
 		var selected=selectedCircle;
 		var a=Math.atan2(mouse.y-selected.owner.y,mouse.x-selected.owner.x);
+		if(a<0) a+=2*PI;
 		var d=dist(mouse.x, mouse.y, selected.owner.x, selected.owner.y);
-		if(selected.type!=6 && currentCircle.children.length>2){	//need extra logic to enforce location of first word/letter
+		if(selected.type!=6 && currentCircle.children.length>2){	//todo: extra logic to enforce location of first word/letter
 			var index=currentCircle.children.indexOf(selectedCircle);
 			var splus=(index+1 >= currentCircle.children.length ? 0 : index+1),
 				sminus=(index-1 < 0 ? currentCircle.children.length-1 : index-1);	//preserves order
 			var aplus=currentCircle.children[splus].a,
 				aminus=currentCircle.children[sminus].a;
 			if(aplus>aminus) {a>0?aminus+=2*PI:aplus-=2*PI;}	//still buggy
+			if(a-aplus>2*PI || a-aminus>2*PI) a-=2*PI; if(a-aplus<-2*PI || a-aminus<-2*PI) a+=2*PI;
 			if(a<aplus) a=aplus;else if(a>aminus) a=aminus;
 		}
 		updateLocation(selected, d, a);
