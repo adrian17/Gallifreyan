@@ -10,7 +10,7 @@ var allCircles=[],
 	mainCircles=[],
 	currentCircle,	//points to a mainCircle which contains selectedCircle
 	selectedCircle=-1, //points to selected circle
-	snapMode=true;
+	snapMode=true;	//can't be disabled for now
 
 var lines=[],
 	selectedLine=-1,

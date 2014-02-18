@@ -30,5 +30,6 @@ features:
 
 enhancements:
 - make line creation algorithm smarter
+- disallow placing lines on invisible sections of circles
 - make arranging words prettier
 - overall tweaks for the generation code, especially sizes

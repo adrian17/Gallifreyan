@@ -70,7 +70,6 @@ $('canvas').mousewheel(function(e, delta, deltaX, deltaY){
 })
 
 $(document).on("contextmenu", "canvas", function(e){
-   snapMode=!snapMode;
    return false;
 });
 
