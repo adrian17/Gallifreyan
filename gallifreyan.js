@@ -45,7 +45,7 @@ $(document).ready(function(){
 function updateText(){
 	resetZoom();
 	
-	mainCircles=[];allCircles=[];lines=[];currentCircle=0;
+	mainCircles=[];allCircles=[];lines=[];currentCircle=0;selectedCircle=-1;selectedLine=-1;
 	
 	var t=$('input').val().trim().toLowerCase().split(" ");
 	localStorage.setItem("input", $('input').val());
@@ -352,6 +352,8 @@ function generateWords(words){
 		}
 		generateWord(word, wordL, r, d, angle)
 	}
+	redraw();
+	
 	createLines();
 	
 	redraw();
@@ -443,7 +445,6 @@ function createLines(){
 	for(i=1;i<allCircles.length;++i){
 		circle=allCircles[i];
 		if(circle.nLines==0) continue;
-		
 		var passes=0;
 		while(circle.lines.length<circle.nLines){
 			//looks for the best path to the base circle if there are no other options left
@@ -484,7 +485,6 @@ function createLines(){
 				circle2=allCircles[j];
 				if(circle2.lines.length>=circle2.nLines) continue;
 				if(circle2.type>=5 && circle2.subtype==5) continue;
-				
 				angle=Math.atan2(circle2.y-circle.y,circle2.x-circle.x);
 				var x=circle.x+circle.r*Math.cos(angle), y=circle.y+circle.r*Math.sin(angle);
 
