@@ -6,8 +6,8 @@ var lineWidth=3.0*canvasScale;
 var PI=Math.PI;
 
 var allCircles=[],
-	mainCircles=[],
-	currentCircle,		//points to a mainCircle which contains selectedCircle
+	wordCircles=[],
+	currentCircle,		//points to a wordCircle which contains selectedCircle
 	selectedCircle=-1, 	//points to selected circle
 	snapMode=true;		//disabling this disables some rule checking; can't be toggled for now
 
@@ -18,18 +18,25 @@ var lines=[],
 var dirtyRender=true;		//whether GUI and red dots will be drawn
 
 Array.prototype.contains = function(k){
-    for(var p in this)
-        if(this[p] === k)
-            return true;
-    return false;
+    return (this.indexOf(k) != -1);
 }
 
-Array.prototype.remove = function(from, to) {
+Array.prototype.remove = function(from, to) {	//based on http://ejohn.org/blog/javascript-array-remove/
   var rest = this.slice((to || from) + 1 || this.length);
   this.length = from < 0 ? this.length + from : from;
   return this.push.apply(this, rest);
 };
+
+//these functions are meant to reduce the clutter in the actual code
 function dist(a,b,x,y){return Math.sqrt(Math.pow((a-x),2)+Math.pow((b-y),2))}
+
+//since we are drawing mostly circles, it's not like we need control over beginPath() and stroke() anyway
+function drawCircle(x, y, r){ ctx.beginPath(); ctx.arc(x, y, r, 0, PI*2); ctx.stroke(); }
+function drawArc(x, y, r, a1, a2){ ctx.beginPath(); ctx.arc(x, y, r, a1, a2); ctx.stroke(); }
+function drawDot(x, y, r){ ctx.beginPath(); ctx.arc(x, y, r, 0, PI*2); ctx.fill(); }
+
+//draws a red dot in a given location, signifying a circle you can select
+function drawRedDot(x, y){ ctx.fillStyle="red"; drawDot(x, y, 3+lineWidth/3); ctx.fillStyle="black"; }
 
 $(document).ready(function(){
 	$('input').val(localStorage.getItem("input"));
@@ -45,7 +52,7 @@ $(document).ready(function(){
 function updateText(){
 	resetZoom();
 	
-	mainCircles=[];allCircles=[];lines=[];currentCircle=0;selectedCircle=-1;selectedLine=-1;
+	wordCircles=[];allCircles=[];lines=[];currentCircle=0;selectedCircle=-1;selectedLine=-1;
 	
 	var t=$('input').val().trim().toLowerCase().split(" ");
 	localStorage.setItem("input", $('input').val());
@@ -66,12 +73,12 @@ function updateText(){
 //thus, it will always be connected to the circles' borders.
 function Line(circle1, a1, circle2, a2){
 	this.draw=function(){
-		if(selectedLine==this) ctx.strokeStyle="grey"; 
+		if(selectedLine==this) ctx.strokeStyle="grey";
+		else ctx.strokeStyle="black";
 		ctx.beginPath(); ctx.moveTo(this.points[0].x, this.points[0].y); ctx.lineTo(this.points[1].x, this.points[1].y); ctx.stroke();
-		ctx.strokeStyle="black"; 
-		if(dirtyRender && this.selectable){ctx.fillStyle="red"; 
-						ctx.beginPath(); ctx.arc(this.points[0].x,this.points[0].y,lineWidth,0,PI*2);ctx.fill();
-						ctx.beginPath(); ctx.arc(this.points[1].x,this.points[1].y,lineWidth,0,PI*2);ctx.fill();
+		if(dirtyRender && this.selectable){
+			drawRedDot(this.points[0].x,this.points[0].y)
+			drawRedDot(this.points[1].x,this.points[1].y)
 		}
 	}
 	this.update=function(){
@@ -105,9 +112,10 @@ function Line(circle1, a1, circle2, a2){
 //a list of other circles and lines connected to it, so they can easily updated in a cascading style
 function Circle(owner,type,subtype, d, r, a){
 	this.draw = function(){
-		if(selectedCircle==this) ctx.strokeStyle="grey"; 
+		if(selectedCircle==this) ctx.strokeStyle="grey";
+		else ctx.strokeStyle="black";
 		
-		if(mainCircles.contains(this)){			//it's a mainCircle so we need to make a gap for B- and T- row letters
+		if(wordCircles.contains(this)){			//it's a wordCircle so we need to make a gap for B- and T- row letters
 			var angles=[];						//a list of intersections with these letters
 			for(var i=0;i<this.children.length;++i){
 				var child=this.children[i];
@@ -120,29 +128,28 @@ function Circle(owner,type,subtype, d, r, a){
 			}
 			if(angles.length==0) angles=[0, 2*PI];
 			for(var i=angles.length;i>0;i-=2){	//we're going in the oppposite direction as that's how arc() draws
-				ctx.beginPath(); ctx.arc(this.x,this.y,this.r,angles[i%angles.length],angles[i-1]);ctx.stroke();
+				drawArc(this.x,this.y,this.r,angles[i%angles.length],angles[i-1]);
 			}
 		}
-		else if(this.type==3 || this.type==1){		//so it's not a mainCircle; not let's check if it's a B- or T- row letter
+		else if(this.type==3 || this.type==1){		//so it's not a wordCircle; not let's check if it's a B- or T- row letter
 			var d, an;
 			d=dist(this.x, this.y, this.owner.x, this.owner.y);
 			an=Math.acos((this.owner.r*this.owner.r-d*d-this.r*this.r)/(-2*d*this.r));an=(PI/2-an)
-			ctx.beginPath(); ctx.arc(this.x,this.y,this.r,this.a+PI/2+an,this.a+3/2*PI-an);ctx.stroke();
+			drawArc(this.x,this.y,this.r,this.a+PI/2+an,this.a+3/2*PI-an);
 		}
 		else{										//if not, we can just draw a circle there
-			ctx.beginPath(); ctx.arc(this.x,this.y,this.r,0,2*PI); ctx.stroke();
+			drawCircle(this.x, this.y, this.r);
 		}
 		
 		if(this.type<5 && (this.subtype==2 || this.subtype==3)){	//drawing the dots
-			var dotR, r, delta;
-			for(var i=-1;i<this.subtype-1;i++){
-				dotR=3+lineWidth/2, r=this.r-3*dotR, delta=(0.2*this.owner.r/this.r)*i;
-				ctx.beginPath();ctx.arc(this.x-Math.cos(this.a+delta)*r,this.y-Math.sin(this.a+delta)*r,dotR,0,PI*2);ctx.fillStyle="black"; ctx.fill();
-			}
+			var dotR=3+lineWidth/2, r=this.r-1-3*dotR, delta=(0.2*this.owner.r/this.r);
+			for(var i=-1;i<this.subtype-1;i++)
+				drawDot(this.x-Math.cos(this.a+delta*i)*r,this.y-Math.sin(this.a+delta*i)*r,dotR);
 		}
-		ctx.strokeStyle="black"; 
-		if(dirtyRender && this.selectable){ctx.beginPath(); ctx.arc(this.x,this.y,lineWidth,0,PI*2);ctx.fillStyle="red"; ctx.fill();}
+		if(dirtyRender && this.selectable)
+			drawRedDot(this.x, this.y);
 	}
+	
 	this.update=function(d, a){		//recalculates the position, forces other circles/lines connected to it to update too
 		var dx, dy;
 		var oldA=this.a;
@@ -150,7 +157,7 @@ function Circle(owner,type,subtype, d, r, a){
 		this.x=this.owner.x+dx;this.y=this.owner.y+dy;this.d=d;
 		if(a<-PI) this.a=a+2*PI; else if(a>PI) this.a=a-2*PI; else this.a=a;
 		for(var i=0;i<this.children.length;i++){
-			if(mainCircles.contains(this))
+			if(wordCircles.contains(this))
 				this.children[i].update(this.children[i].d, this.children[i].a);
 			else
 				this.children[i].update(this.children[i].d, this.children[i].a-oldA+this.a);
@@ -205,24 +212,24 @@ function doClick(e){
 };
 
 //makes sure that the correct distance from the base circle is kept according to language rules
-function updateLocation(selected, d, a){
+function correctCircleLocation(selected, d, a){
 	if(!snapMode) {selected.update(d, a); return;}
 	switch(selected.type){
-		case 1:
+		case 1:		//B-row
 			if(d>selected.owner.r-selected.r*0.5) d=selected.owner.r-selected.r*0.5;
-			if(d<selected.owner.r-selected.r+1.5+lineWidth) d=selected.owner.r-selected.r+1.5+lineWidth;
+			if(d<selected.owner.r-selected.r+1) d=selected.owner.r-selected.r+1;
 			break;
-		case 2:
+		case 2:		//J-row
 			if(d>selected.owner.r-selected.r-5) d=selected.owner.r-selected.r-5;
 			break;
-		case 3:
+		case 3:		//T-row
 			if(d>selected.owner.r+selected.r*0.8) d=selected.owner.r+selected.r*0.8;
 			if(d<selected.owner.r) d=selected.owner.r;
 			break;
-		case 4:
+		case 4:		//TH-row
 			d=selected.owner.r;
 			break;
-		case 5:
+		case 5:		//vowels, laying on a wordCircle
 			switch(selected.subtype){
 				case 1:if(d<selected.owner.r+selected.r) d=selected.owner.r+selected.r;break;
 				case 2:
@@ -231,8 +238,8 @@ function updateLocation(selected, d, a){
 					d=selected.owner.r;break;
 				case 4:if(d>selected.owner.r-selected.r) d=selected.owner.r-selected.r;break;
 			}break;
-		case 6:
-			switch(selected.subtype){ //TODO
+		case 6:		//vowels, connected to consonants
+			switch(selected.subtype){
 				case 1:
 					if(selected.owner.type==1){if(d<selected.r*2) d=selected.r*2; a=selected.owner.a;}
 					if(selected.owner.type==2){if(d<selected.owner.r+selected.r) d=selected.owner.r+selected.r; a=selected.owner.a;}
@@ -251,10 +258,10 @@ function updateLocation(selected, d, a){
 			}break;
 	}
 	selected.update(d, a);
-	for(var i=0;i<selected.children.length;i++) updateLocation(selected.children[i], selected.children[i].d, selected.children[i].a);
+	for(var i=0;i<selected.children.length;i++) correctCircleLocation(selected.children[i], selected.children[i].d, selected.children[i].a);
 }
 
-//manages the movement of circles and lines. In case of circles, updateLocation() is called to enforce language rules
+//manages the movement of circles and lines. In case of circles, correctCircleLocation() is called to enforce language rules
 $('canvas').mousemove(function(e){
 	var mouse=getMouse(e);
 	if(selectedCircle != -1){
@@ -272,7 +279,7 @@ $('canvas').mousemove(function(e){
 			if(a-aplus>2*PI || a-aminus>2*PI) a-=2*PI; if(a-aplus<-2*PI || a-aminus<-2*PI) a+=2*PI;
 			if(a<aplus) a=aplus;else if(a>aminus) a=aminus;
 		}
-		updateLocation(selected, d, a);
+		correctCircleLocation(selected, d, a);
 		redraw();
 		return;
 	}
@@ -310,7 +317,7 @@ $('canvas').mousewheel(function(event, delta, deltaX, deltaY){
 			selected.children[i].r *= (selected.r/oldR);
 			selected.children[i].update(selected.children[i].d*(selected.r/oldR), selected.children[i].a);
 		}
-		updateLocation(selected, selected.d, selected.a);
+		correctCircleLocation(selected, selected.d, selected.a);
 		redraw();
 	}
 	return false;
@@ -377,7 +384,7 @@ function generateWord(word, wordL, mcR, dist, mainAngle){
 	
 	var newMainCircle = new Circle(allCircles[0], 2,0,dist, mcR, mainAngle);
 	
-	mainCircles.push(newMainCircle);
+	wordCircles.push(newMainCircle);
 	allCircles.push(newMainCircle);
 	allCircles[0].children.push(newMainCircle);
 	
@@ -431,7 +438,7 @@ function generateWord(word, wordL, mcR, dist, mainAngle){
 			}
 		}
 		newCircle.nLines=nLines;
-		updateLocation(newCircle, newCircle.d, newCircle.a);
+		correctCircleLocation(newCircle, newCircle.d, newCircle.a);
 		owner.children.push(newCircle);
 		
 		allCircles.push(newCircle);
@@ -517,7 +524,7 @@ function createLines(){
 //checks whether all the circles have a correct amount of lines connected
 function checkLines(){
 	for(var i=1;i<allCircles.length;++i){	//we don't check the first circle
-		if(mainCircles.indexOf(allCircles[i])!=-1) continue;	//also skip mainCircles
+		if(wordCircles.indexOf(allCircles[i])!=-1) continue;	//also skip wordCircles
 		if(allCircles[i].nLines!=allCircles[i].lines.length) return 0;
 	}
 	return 1;
