@@ -9,7 +9,7 @@ var scrollerObj = new Scroller(function(left, top, zoom) {
 	maxZoom: 10
 });
 
-var canvas, ctx, mousedown=false, mousemove=false;
+var canvas, ctx, mousedown=false, mousemove=0;
 
 function prepareCanvas(){
 	canvas=document.getElementById("canvas");
@@ -27,20 +27,20 @@ function prepareCanvas(){
 
 	canvas.addEventListener("mousedown", function(e) {
 		scrollerObj.doTouchStart([{pageX: e.pageX,pageY: e.pageY}], e.timeStamp);
-		mousemove=false;
+		mousemove=0;
 		mousedown = true;
 		redraw();
 	}, false);
 
 	canvas.addEventListener("mousemove", function(e) {
-		mousemove=true;
+		mousemove+=1;
 		if (!mousedown) {return;}
 		scrollerObj.doTouchMove([{pageX: e.pageX,pageY: e.pageY}], e.timeStamp);
 		redraw();
 	}, false);
 
 	canvas.addEventListener("mouseup", function(e) {
-		if(!mousemove) { //it was a click
+		if(mousemove<=1) { //ignore the first mouseMove as sometimes it's triggered together with mouseDown
 			doClick(e);
 		}
 		if (!mousedown) {return;}
