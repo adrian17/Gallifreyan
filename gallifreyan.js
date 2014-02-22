@@ -380,7 +380,7 @@ function generateWord(word, wordL, mcR, dist, mainAngle){
 	var globalR=1.8*mcR/(wordL+2);
 	
 	var i;
-	var owner, newCircle;
+	var owner, newCircle=0;
 	
 	var newMainCircle = new Circle(allCircles[0], 2,0,dist, mcR, mainAngle);
 	
@@ -391,6 +391,7 @@ function generateWord(word, wordL, mcR, dist, mainAngle){
 	for(var i=0;i<word.length;i++)
 	{
 		letter=word[i];
+		newCircle=0;
 		owner=newMainCircle;
 		
 		if(i>0)angle-=delta;if(angle<-PI) angle+=2*PI;
@@ -437,6 +438,8 @@ function generateWord(word, wordL, mcR, dist, mainAngle){
 				newCircle=new Circle(owner, type, subtype,owner.r, r, angle);
 			}
 		}
+		if(newCircle==0) continue;	//skip, if the letter wasn't found
+		
 		newCircle.nLines=nLines;
 		correctCircleLocation(newCircle, newCircle.d, newCircle.a);
 		owner.children.push(newCircle);
