@@ -269,15 +269,17 @@ $('canvas').mousemove(function(e){
 		var a=Math.atan2(mouse.y-selected.owner.y,mouse.x-selected.owner.x);
 		if(a<0) a+=2*PI;
 		var d=dist(mouse.x, mouse.y, selected.owner.x, selected.owner.y);
-		if(selected.type!=6 && currentCircle.children.length>2){	//todo: extra logic to enforce location of first word/letter
+		if(selected.type!=6 && currentCircle.children.length>2){
 			var index=currentCircle.children.indexOf(selectedCircle);
-			var splus=(index+1 >= currentCircle.children.length ? 0 : index+1),
-				sminus=(index-1 < 0 ? currentCircle.children.length-1 : index-1);	//preserves order
-			var aplus=currentCircle.children[splus].a,
-				aminus=currentCircle.children[sminus].a;
-			if(aplus>aminus) {a>0?aminus+=2*PI:aplus-=2*PI;}	//still buggy
-			if(a-aplus>2*PI || a-aminus>2*PI) a-=2*PI; if(a-aplus<-2*PI || a-aminus<-2*PI) a+=2*PI;
-			if(a<aplus) a=aplus;else if(a>aminus) a=aminus;
+			var nextAngle=(index+1 >= currentCircle.children.length ? 
+					PI/2 : //it's a last circle, so let's make sure it looks like the last one
+					currentCircle.children[index+1].a),
+				previousAngle=(index-1 < 0 ?
+					PI/2 :	//it's first circle, so let's make sure it looks like the first one
+					currentCircle.children[index-1].a);
+			if(nextAngle>previousAngle) {a>0?previousAngle+=2*PI:nextAngle-=2*PI;}	//still buggy
+			if(a-nextAngle>2*PI || a-previousAngle>2*PI) a-=2*PI; if(a-nextAngle<-2*PI || a-previousAngle<-2*PI) a+=2*PI;
+			if(a<nextAngle) a=nextAngle;else if(a>previousAngle) a=previousAngle;
 		}
 		correctCircleLocation(selected, d, a);
 		redraw();
@@ -328,13 +330,17 @@ function drawAngles(){
 	if(currentCircle.children.length<3) return;
 	var len=selectedCircle.owner.r*1.3;
 	var index=currentCircle.children.indexOf(selectedCircle);
-	var splus=(index+1 >= currentCircle.children.length ? 0 : index+1),
-		sminus=(index-1 < 0 ? currentCircle.children.length-1 : index-1);	//preserves order
+	var nextAngle=(index+1 >= currentCircle.children.length ? 
+		PI/2 : //it's a last circle, so let's make sure it looks like the last one
+		currentCircle.children[index+1].a),
+	previousAngle=(index-1 < 0 ?
+		PI/2 :	//it's first circle, so let's make sure it looks like the first one
+		currentCircle.children[index-1].a);
 	ctx.strokeStyle="red";
 	ctx.beginPath(); ctx.moveTo(currentCircle.x,currentCircle.y);
-	ctx.lineTo(currentCircle.x+Math.cos(currentCircle.children[splus].a)*(len), currentCircle.y+Math.sin(currentCircle.children[splus].a)*(len));
+	ctx.lineTo(currentCircle.x+Math.cos(nextAngle)*(len), currentCircle.y+Math.sin(nextAngle)*(len));
 	ctx.moveTo(currentCircle.x,currentCircle.y);
-	ctx.lineTo(currentCircle.x+Math.cos(currentCircle.children[sminus].a)*(len), currentCircle.y+Math.sin(currentCircle.children[sminus].a)*(len));ctx.stroke();
+	ctx.lineTo(currentCircle.x+Math.cos(previousAngle)*(len), currentCircle.y+Math.sin(previousAngle)*(len));ctx.stroke();
 	ctx.strokeStyle="black";
 }
 
