@@ -370,7 +370,7 @@ function generateWords(words){
 var map={"b":1,"ch":2,"d":3,"f":4,"g":5,"h":6,
 		"j":1,"k":2,"l":3,"m":4,"n":5,"p":6,
 		"t":1,"sh":2,"r":3,"s":4,"v":5,"w":6,
-		"th":1,"y":2,"z":3,"nq":4,"qu":5,"x":6,
+		"th":1,"y":2,"z":3,"ng":4,"qu":5,"x":6,
 		"a":1,"e":2,"i":3,"o":4,"u":5};
 
 //generates a single word
