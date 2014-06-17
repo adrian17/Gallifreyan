@@ -1,3 +1,4 @@
+"use strict";
 function findIntersection(cX, cY, cR, x0, y0, a){
 	//firstly, let's make a line vector
 	var vec={x:100*Math.cos(a), y:100*Math.sin(a)};

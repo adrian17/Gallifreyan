@@ -1,4 +1,5 @@
-buttons=[];
+"use strict";
+var buttons=[];
 
 function Button(x, y, width, text, f){
 	this.draw=function(){

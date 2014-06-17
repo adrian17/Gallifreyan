@@ -1,4 +1,5 @@
-﻿var canvasSize=1000.0;				//the image resolution in pixels
+﻿"use strict";
+var canvasSize=1000.0;				//the image resolution in pixels
 var canvasScale=canvasSize/800.0;	//800=the canvas size on the screen
 var midPoint=canvasSize/2.0;		//the (x, y) of the centerpoint
 var outerR=midPoint*0.9;			//radius of the outermost circle
@@ -62,7 +63,7 @@ function updateText(){
 		var toParse=t[j];
 		w.push([]);
 		for(var i=0;i<toParse.length;i++){
-			if(i==toParse.length){w[j].push(toParse[toParse.length-1]); break;}
+			if(i===toParse.length){w[j].push(toParse[toParse.length-1]); break;}
 			if(toParse.substring(i, i+2).match("(ch|sh|th|ng|qu)")) {w[j].push(toParse.substring(i, i+2)); i++;}
 			else w[j].push(toParse[i]);
 		}
@@ -74,7 +75,7 @@ function updateText(){
 //thus, it will always be connected to the circles' borders.
 function Line(circle1, a1, circle2, a2){
 	this.draw=function(){
-		if(selectedLine==this) ctx.strokeStyle="grey";
+		if(selectedLine===this) ctx.strokeStyle="grey";
 		else ctx.strokeStyle="black";
 		ctx.beginPath(); ctx.moveTo(this.points[0].x, this.points[0].y); ctx.lineTo(this.points[1].x, this.points[1].y); ctx.stroke();
 		if(dirtyRender && this.selectable){
@@ -113,26 +114,26 @@ function Line(circle1, a1, circle2, a2){
 //a list of other circles and lines connected to it, so they can easily updated in a cascading style
 function Circle(owner,type,subtype, d, r, a){
 	this.draw = function(){
-		if(selectedCircle==this) ctx.strokeStyle="grey";
+		if(selectedCircle===this) ctx.strokeStyle="grey";
 		else ctx.strokeStyle="black";
 		
 		if(wordCircles.contains(this)){			//it's a wordCircle so we need to make a gap for B- and T- row letters
 			var angles=[];						//a list of intersections with these letters
 			for(var i=0;i<this.children.length;++i){
 				var child=this.children[i];
-				if(child.type==3 || child.type==1){
+				if(child.type===3 || child.type===1){
 					var d, an;
 					d=dist(this.x, this.y, child.x, child.y);
 					an=Math.acos((child.r*child.r-d*d-this.r*this.r)/(-2*d*this.r));
 					angles.push(child.a+an, child.a-an);
 				}
 			}
-			if(angles.length==0) angles=[0, 2*PI];
+			if(angles.length===0) angles=[0, 2*PI];
 			for(var i=angles.length;i>0;i-=2){	//we're going in the oppposite direction as that's how arc() draws
 				drawArc(this.x,this.y,this.r,angles[i%angles.length],angles[i-1]);
 			}
 		}
-		else if(this.type==3 || this.type==1){		//so it's not a wordCircle; not let's check if it's a B- or T- row letter
+		else if(this.type===3 || this.type===1){		//so it's not a wordCircle; not let's check if it's a B- or T- row letter
 			var d, an;
 			d=dist(this.x, this.y, this.owner.x, this.owner.y);
 			an=Math.acos((this.owner.r*this.owner.r-d*d-this.r*this.r)/(-2*d*this.r));an=(PI/2-an)
@@ -142,7 +143,7 @@ function Circle(owner,type,subtype, d, r, a){
 			drawCircle(this.x, this.y, this.r);
 		}
 		
-		if(this.type<5 && (this.subtype==2 || this.subtype==3)){	//drawing the dots
+		if(this.type<5 && (this.subtype===2 || this.subtype===3)){	//drawing the dots
 			var dotR=3+lineWidth/2, r=this.r-1-3*dotR, delta=(0.2*this.owner.r/this.r);
 			for(var i=-1;i<this.subtype-1;i++)
 				drawDot(this.x-Math.cos(this.a+delta*i)*r,this.y-Math.sin(this.a+delta*i)*r,dotR);
@@ -194,7 +195,7 @@ function doClick(e){
 		if (d<minD){
 			minD=d;
 			selectedCircle=allCircles[i];
-			if (selectedCircle.type==6) currentCircle=selectedCircle.owner.owner;
+			if (selectedCircle.type===6) currentCircle=selectedCircle.owner.owner;
 			else currentCircle=selectedCircle.owner;
 		}
 	}
@@ -242,16 +243,16 @@ function correctCircleLocation(selected, d, a){
 		case 6:		//vowels, connected to consonants
 			switch(selected.subtype){
 				case 1:
-					if(selected.owner.type==1){if(d<selected.r*2) d=selected.r*2; a=selected.owner.a;}
-					if(selected.owner.type==2){if(d<selected.owner.r+selected.r) d=selected.owner.r+selected.r; a=selected.owner.a;}
-					if(selected.owner.type==3){if(d<selected.owner.r/2) d=selected.owner.r/2; a=selected.owner.a;}
-					if(selected.owner.type==4){if(d<selected.r) d=selected.r;
+					if(selected.owner.type===1){if(d<selected.r*2) d=selected.r*2; a=selected.owner.a;}
+					if(selected.owner.type===2){if(d<selected.owner.r+selected.r) d=selected.owner.r+selected.r; a=selected.owner.a;}
+					if(selected.owner.type===3){if(d<selected.owner.r/2) d=selected.owner.r/2; a=selected.owner.a;}
+					if(selected.owner.type===4){if(d<selected.r) d=selected.r;
 												if(d>selected.owner.r-selected.r) d=selected.owner.r-selected.r; a=selected.owner.a;}
 					break;
 				case 2:
 				case 3:
 				case 5:
-					if(selected.owner.type==3) {d=selected.owner.d-selected.owner.owner.r; a=selected.owner.a+PI;}//locked
+					if(selected.owner.type===3) {d=selected.owner.d-selected.owner.owner.r; a=selected.owner.a+PI;}//locked
 					else d=0;
 					break;
 				case 4:
@@ -316,7 +317,7 @@ $('canvas').mousewheel(function(event, delta, deltaX, deltaY){
 		else
 			selected.r=selected.r<selected.owner.r*0.1?selected.owner.r*0.1:selected.r;
 		
-		for(i=0;i<selected.children.length;i++){
+		for(var i=0;i<selected.children.length;i++){
 			selected.children[i].r *= (selected.r/oldR);
 			selected.children[i].update(selected.children[i].d*(selected.r/oldR), selected.children[i].a);
 		}
@@ -352,8 +353,8 @@ function generateWords(words){
 	
 	var delta=2*PI/words.length;
 	var angle=PI/2;
-	var r = words.length==1 ? outerR*0.8 : 1.7*outerR/(words.length+2);
-	var d = words.length==1 ? 0 : outerR-r*1.2;
+	var r = words.length===1 ? outerR*0.8 : 1.7*outerR/(words.length+2);
+	var d = words.length===1 ? 0 : outerR-r*1.2;
 	
 	for(var i=0;i<words.length;i++){
 		if(i>0)angle-=delta; angle=normalizeAngle(angle);
@@ -397,7 +398,7 @@ function generateWord(word, wordL, mcR, dist, mainAngle){
 	
 	for(var i=0;i<word.length;i++)
 	{
-		letter=word[i];
+		var letter=word[i];
 		newCircle=0;
 		owner=newMainCircle;
 		
@@ -427,13 +428,13 @@ function generateWord(word, wordL, mcR, dist, mainAngle){
 			var previous=owner.children[owner.children.length-1];
 			r=globalR*0.25;
 			
-			if(previous && subtype!=4 && previous.type==3){	//let's not attach to this as floating letters look ugly
+			if(previous && subtype!=4 && previous.type===3){	//let's not attach to this as floating letters look ugly
 				type=5, d=mcR;
 				angle+=delta/2;
 				newCircle=new Circle(owner, type, subtype,owner.r, r, angle);
 				angle+=delta/2;
 			}
-			else if(previous && i!=0 && previous.type<5 && previous.children.length==0){	//are we free to attach?
+			else if(previous && i!=0 && previous.type<5 && previous.children.length===0){	//are we free to attach?
 				type=6;
 				owner=previous;
 				angle+=delta;
@@ -445,7 +446,7 @@ function generateWord(word, wordL, mcR, dist, mainAngle){
 				newCircle=new Circle(owner, type, subtype,owner.r, r, angle);
 			}
 		}
-		if(newCircle==0) continue;	//skip, if the letter wasn't found
+		if(newCircle===0) continue;	//skip, if the letter wasn't found
 		
 		newCircle.nLines=nLines;
 		correctCircleLocation(newCircle, newCircle.d, newCircle.a);
@@ -461,9 +462,9 @@ function isLineTooClose(circle, angle){
 	for (var i=0;i<circle.lines.length;++i){
 		var diff, line=circle.lines[i];
 		diff=normalizeAngle(line.points[0].a-angle); diff=Math.abs(diff);
-		if(line.points[0].circle==circle && diff<0.5) return 1;
+		if(line.points[0].circle===circle && diff<0.5) return 1;
 		diff=normalizeAngle(line.points[1].a-angle); diff=Math.abs(diff);
-		if(line.points[1].circle==circle && diff<0.5) return 1;
+		if(line.points[1].circle===circle && diff<0.5) return 1;
 	}
 	return 0;
 }
@@ -474,13 +475,13 @@ function createLines(){
 	var bestAngle=0, inter, minInter;
 	for(i=1;i<allCircles.length;++i){
 		circle=allCircles[i];
-		if(circle.nLines==0) continue;
+		if(circle.nLines===0) continue;
 		var passes=0;
 		while(circle.lines.length<circle.nLines){
 			//looks for the best path to the base circle if there are no other options left
-			if(passes>100 || (circle.type>=5 && circle.subtype==5)){
-				if(circle.type==6){if(circle.subtype==3) var angle=circle.owner.a+PI;else angle=circle.owner.a;}
-				else if(circle.type==5 && circle.subtype==5) angle=circle.a;
+			if(passes>100 || (circle.type>=5 && circle.subtype===5)){
+				if(circle.type===6){if(circle.subtype===3) var angle=circle.owner.a+PI;else angle=circle.owner.a;}
+				else if(circle.type===5 && circle.subtype===5) angle=circle.a;
 				else angle=circle.a+PI;
 				
 				circle2=allCircles[0];	//the only one left
@@ -489,7 +490,7 @@ function createLines(){
 				minInter=1000;
 				for(var n=0;n<100;++n){
 					inter=0;
-					var randAngle=angle+(Math.random()-0.5)*(circle.type==6 ? PI/6 : PI/2);
+					var randAngle=angle+(Math.random()-0.5)*(circle.type===6 ? PI/6 : PI/2);
 					var x=circle.x+circle.r*Math.cos(randAngle), y=circle.y+circle.r*Math.sin(randAngle);
 					intersection=findIntersection(circle2.x, circle2.y, circle2.r, x, y, randAngle);
 					var maxT=intersection.t;
@@ -498,10 +499,10 @@ function createLines(){
 					if(isLineTooClose(circle2, intersection.a)) continue;
 					
 					for(k=1;k<allCircles.length;++k){
-						if(k==i) continue;
+						if(k===i) continue;
 						var circle3=allCircles[k];
 						intersection=findIntersection(circle3.x, circle3.y, circle3.r, x, y, randAngle);
-						if(intersection==0) continue;
+						if(intersection===0) continue;
 						if(intersection.t<maxT) inter++;
 					}
 					if(inter<minInter) {minInter=inter; bestAngle=randAngle;}
@@ -514,15 +515,15 @@ function createLines(){
 			}
 			//normal routine, searches for pairs that still need circles
 			for(j=1;j<allCircles.length;++j){
-				if(j==i) continue;
+				if(j===i) continue;
 				circle2=allCircles[j];
 				if(circle2.lines.length>=circle2.nLines) continue;
-				if(circle2.type>=5 && circle2.subtype==5) continue;
+				if(circle2.type>=5 && circle2.subtype===5) continue;
 				angle=Math.atan2(circle2.y-circle.y,circle2.x-circle.x);
 				var x=circle.x+circle.r*Math.cos(angle), y=circle.y+circle.r*Math.sin(angle);
 
 				intersection=findIntersection(circle2.x, circle2.y, circle2.r, x, y, angle);
-				if(intersection==0) continue;
+				if(intersection===0) continue;
 				if(Math.floor(Math.random()+0.6)) continue;	//some extra randomness
 				
 				var rand=(Math.random()-0.5)*PI/4;
@@ -531,12 +532,12 @@ function createLines(){
 				if(isLineTooClose(circle2, intersection.a-rand)) continue;
 				
 				//let's just check if we don't run into a white section of a circle
-				if(circle.type==1 || circle.type==3){
+				if(circle.type===1 || circle.type===3){
 					var x=circle.x+circle.r*Math.cos(angle+rand), y=circle.y+circle.r*Math.sin(angle+rand);
 					var data=ctx.getImageData(Math.floor(x), Math.floor(y), 1, 1).data;
 					if(!(data[0]!=255 && data[1]!=255 && data[2]!=255 && data[3]>0)) continue;
 				}
-				if(circle2.type==1 || circle2.type==3){
+				if(circle2.type===1 || circle2.type===3){
 					x=circle2.x+circle2.r*Math.cos(intersection.a-rand), y=circle2.y+circle2.r*Math.sin(intersection.a-rand);
 					data=ctx.getImageData(Math.floor(x), Math.floor(y), 1, 1).data;
 					if(!(data[0]!=255 && data[1]!=255 && data[2]!=255 && data[3]>0)) continue;
