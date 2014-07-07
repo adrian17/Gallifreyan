@@ -1,27 +1,27 @@
 body {
-	text-align:center;
-	font: normal 20px/100% Verdana, Tahoma, sans-serif;  
+    text-align:center;
+    font: normal 20px/100% Verdana, Tahoma, sans-serif;  
 }
 p {
-	margin: 5px;
+    margin: 5px;
 }
 canvas {
-	display: inline;
-	border: 1px solid black;
+    display: inline;
+    border: 1px solid black;
 }
 #canvas-container {
-	width: 95%;
-	padding: 5px;
+    width: 95%;
+    padding: 5px;
 }
 #textfield-container {
-	width: 100%;
-	padding: 0px;
+    width: 100%;
+    padding: 0px;
 }
 input {
-	margin: 10px;
-	padding: 10px;  
+    margin: 10px;
+    padding: 10px;  
     border: solid 1px #E5E5E5;  
-	outline: 0;  
+    outline: 0;  
     font-size: 15px;
     width: 200px;  
     background: #FFFFFF;  
@@ -31,6 +31,6 @@ button {
     padding: 9px 15px;  
     background: #617798;  
     border: 0;
-	font-size: 15px;
+    font-size: 15px;
     color: #FFFFFF;   
 }
