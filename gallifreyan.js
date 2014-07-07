@@ -8,12 +8,12 @@ var PI=Math.PI;
 
 var allCircles=[],
 	wordCircles=[],
-	currentCircle,		//points to a wordCircle which contains selectedCircle
-	selectedCircle=-1, 	//points to selected circle
+	currentCircle=null,		//points to a wordCircle which contains selectedCircle
+	selectedCircle=null, 	//points to selected circle
 	snapMode=true;		//disabling this disables some rule checking; can't be toggled for now
 
 var lines=[],
-	selectedLine=-1,	//points to selected line
+	selectedLine=null,	//points to selected line
 	lineEnd=0;			//tells which end of the line is selected
 
 var dirtyRender=true;		//whether GUI and red dots will be drawn
@@ -54,7 +54,7 @@ $(document).ready(function(){
 function updateText(){
 	resetZoom();
 	
-	wordCircles=[];allCircles=[];lines=[];currentCircle=0;selectedCircle=-1;selectedLine=-1;
+	wordCircles=[];allCircles=[];lines=[];currentCircle=null;selectedCircle=null;selectedLine=null;
 	
 	var t=$('input').val().trim().toLowerCase().split(" ");
 	localStorage.setItem("input", $('input').val());
@@ -180,8 +180,8 @@ function Circle(owner,type,subtype, d, r, a){
 //selects the circle/line. Checks whether any buttons are pressed.
 function doClick(e){
 	var mouse=getMouse(e);
-	if(selectedCircle != -1) {selectedCircle=-1; redraw(); return;}
-	if(selectedLine != -1) {selectedLine=-1; redraw(); return;}
+	if(selectedCircle != null) {selectedCircle=null; redraw(); return;}
+	if(selectedLine != null) {selectedLine=null; redraw(); return;}
 	
 	for(var i=0;i<buttons.length;++i){
 		if(buttons[i].click(e)) return;
@@ -210,7 +210,7 @@ function doClick(e){
 			}
 		}
 	}
-	if(selectedLine!=-1){selectedCircle=-1;}
+	if(selectedLine!=null){selectedCircle=null;}
 };
 
 //makes sure that the correct distance from the base circle is kept according to language rules
@@ -266,7 +266,7 @@ function correctCircleLocation(selected, d, a){
 //manages the movement of circles and lines. In case of circles, correctCircleLocation() is called to enforce language rules
 $('canvas').mousemove(function(e){
 	var mouse=getMouse(e);
-	if(selectedCircle != -1){
+	if(selectedCircle != null){
 		var selected=selectedCircle;
 		var a=Math.atan2(mouse.y-selected.owner.y,mouse.x-selected.owner.x);
 		a=normalizeAngle(a);
@@ -288,7 +288,7 @@ $('canvas').mousemove(function(e){
 		return;
 	}
 	var i, a;
-	if(selectedLine != -1){
+	if(selectedLine != null){
 		var selected=selectedLine;
 		var minD=50;
 		for(i=0;i<allCircles.length;++i){
@@ -306,7 +306,7 @@ $('canvas').mousemove(function(e){
 
 //changes the circle's radius
 $('canvas').mousewheel(function(event, delta, deltaX, deltaY){
-	if(selectedCircle != -1){
+	if(selectedCircle != null){
 
 		var selected=selectedCircle;
 		var oldR=selected.r;
@@ -579,7 +579,7 @@ function redraw(){
 	for(var i=0;i<lines.length;++i){
 		lines[i].draw();
 	}
-	if(selectedCircle!=-1 && selectedCircle.type!=6) drawAngles();
+	if(selectedCircle!=null && selectedCircle.type!=6) drawAngles();
 	
 	ctx.setTransform(1,0,0,1, 0, 0);
 	if(dirtyRender) {drawGUI();}
