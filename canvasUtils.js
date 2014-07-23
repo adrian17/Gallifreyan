@@ -64,7 +64,7 @@ function getMouse(e) {
 }
 
 $('canvas').mousewheel(function(e, delta, deltaX, deltaY) {
-    if (selectedCircle != -1) return;
+    if (selectedCircle) return;
     scrollerObj.doMouseZoom(-delta * 3, e.timeStamp, e.pageX, e.pageY);
     redraw();
     return false;
