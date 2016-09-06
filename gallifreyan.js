@@ -64,9 +64,18 @@ function updateText() {
         var toParse = text[j];
         words.push([]);
         for (var i = 0; i < toParse.length; i++) {
-            if (i === toParse.length) { words[j].push(toParse[toParse.length - 1]); break; }
-            if (toParse.substring(i, i + 2).match("(ch|sh|th|ng|qu)")) { words[j].push(toParse.substring(i, i + 2)); i++; }
-            else words[j].push(toParse[i]);
+            if (toParse.substring(i, i + 2).match("(ch|sh|th|ng|qu)")) {
+                words[j].push(toParse.substring(i, i + 2));
+                i++;
+            } else if (toParse[i] === "c") {
+                //soft c comes usually before i, e or y
+                if (i+1 < toParse.length && toParse[i+1].match("[iey]"))
+                    words[j].push("s");
+                else
+                    words[j].push("k");
+            } else {
+                words[j].push(toParse[i]);
+            }
         }
     }
     generateWords(words);
