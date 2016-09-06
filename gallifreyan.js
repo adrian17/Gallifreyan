@@ -18,6 +18,8 @@ var lines           = [],
 
 var dirtyRender     = true; //whether GUI and red dots will be drawn
 
+var deleteLineMode  = false;//whether next selected line will be deleted
+
 Array.prototype.contains = function(k) {
     return (this.indexOf(k) != -1);
 }
@@ -26,6 +28,11 @@ Array.prototype.remove = function(from, to) {   //based on http://ejohn.org/blog
     var rest = this.slice((to || from) + 1 || this.length);
     this.length = from < 0 ? this.length + from : from;
     return this.push.apply(this, rest);
+};
+
+Array.prototype.removeItem = function(item) {
+    var index = this.indexOf(item);
+    return index > -1 ? this.remove(index) : this;
 };
 
 //math
@@ -40,6 +47,7 @@ function drawDot(x, y, r) { ctx.beginPath(); ctx.arc(x, y, r, 0, PI * 2); ctx.fi
 
 //draws a red dot in a given location, signifying a circle you can select
 function drawRedDot(x, y) { ctx.fillStyle = "red"; drawDot(x, y, 3 + lineWidth / 3); ctx.fillStyle = "black"; }
+function drawBigRedDot(x, y) { ctx.fillStyle = "red"; drawDot(x, y, 3 + lineWidth); ctx.fillStyle = "black"; }
 
 $(document).ready(function() {
     $('input').val(localStorage.getItem("input"));
@@ -72,6 +80,13 @@ function updateText() {
     generateWords(words);
 }
 
+//disconnect the line from both circles it's connected to, and remove it from the global list
+function deleteLine(line) {
+    line.points[0].circle.lines.removeItem(line);
+    line.points[1].circle.lines.removeItem(line);
+    lines.removeItem(line);
+}
+
 //a line is always defined be the circles it is connected to and angles in relation to these circles.
 //thus, it will always be connected to the circles' borders.
 function Line(circle1, a1, circle2, a2) {
@@ -79,8 +94,13 @@ function Line(circle1, a1, circle2, a2) {
         ctx.strokeStyle = (selectedLine === this) ? "grey" : "black";
         drawLine(this.points[0].x, this.points[0].y, this.points[1].x, this.points[1].y)
         if (dirtyRender && this.selectable) {
-            drawRedDot(this.points[0].x, this.points[0].y)
-            drawRedDot(this.points[1].x, this.points[1].y)
+            if (deleteLineMode) {
+                drawBigRedDot(this.points[0].x, this.points[0].y);
+                drawBigRedDot(this.points[1].x, this.points[1].y);
+            } else {
+                drawRedDot(this.points[0].x, this.points[0].y);
+                drawRedDot(this.points[1].x, this.points[1].y);
+            }
         }
     }
     this.update = function() {
@@ -209,7 +229,17 @@ function doClick(e) {
             }
         }
     }
-    if (selectedLine != null) selectedCircle = null;    //if we've selected a line, let's unselect a circle
+    if (selectedLine != null) {
+        selectedCircle = null;    //if we've selected a line, let's unselect a circle
+        if (deleteLineMode) {
+            deleteLine(selectedLine);
+            selectedLine = null;
+        }
+    }
+    if (deleteLineMode) {
+        deleteLineMode = false;
+        redraw();
+    }
 };
 
 //makes sure that the correct distance from the base circle is kept according to language rules
