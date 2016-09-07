@@ -1,4 +1,4 @@
-﻿"use strict";
+"use strict";
 var canvasSize  = 1000.0;               //the image resolution in pixels
 var canvasScale = canvasSize / 800.0;   //800=the canvas size on the screen
 var midPoint    = canvasSize / 2.0;     //the (x, y) of the centerpoint
