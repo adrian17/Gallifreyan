@@ -64,9 +64,18 @@ function updateText() {
         var toParse = text[j];
         words.push([]);
         for (var i = 0; i < toParse.length; i++) {
-            if (i === toParse.length) { words[j].push(toParse[toParse.length - 1]); break; }
-            if (toParse.substring(i, i + 2).match("(ch|sh|th|ng|qu)")) { words[j].push(toParse.substring(i, i + 2)); i++; }
-            else words[j].push(toParse[i]);
+            if (toParse.substring(i, i + 2).match("(ch|sh|th|ng|qu)")) {
+                words[j].push(toParse.substring(i, i + 2));
+                i++;
+            } else if (toParse[i] === "c") {
+                //soft c comes usually before i, e or y
+                if (i+1 < toParse.length && toParse[i+1].match("[iey]"))
+                    words[j].push("s");
+                else
+                    words[j].push("k");
+            } else {
+                words[j].push(toParse[i]);
+            }
         }
     }
     generateWords(words);
@@ -364,7 +373,7 @@ function generateWords(words) {
         var word = words[i];
         var wordL = 0;  //approximates the number of letters, taking into account that some will be merged
         for (var j = 0; j < word.length; j++) {
-            if (j > 0 && word[j].match("(a|e|i|o|u)") && !(word[j - 1].match("(a|e|i|o|u)"))) continue;
+            if (j > 0 && word[j].match("^(a|e|i|o|u)$") && !(word[j - 1].match("^(a|e|i|o|u)$"))) continue;
             wordL++;
         }
         generateWord(word, wordL, r, d, angle)
@@ -414,19 +423,19 @@ function generateWord(word, wordL, mcR, dist, mainAngle) {
             type = 1, r = globalR, d = mcR - r + 1;
             newCircle = new Circle(owner, type, subtype, d, r, angle);
         }
-        if (letter.match("^(j|k|l|m|n|p)$")) {
+        else if (letter.match("^(j|k|l|m|n|p)$")) {
             type = 2, r = globalR, d = mcR - r - 5;
             newCircle = new Circle(owner, type, subtype, d, r, angle);
         }
-        if (letter.match("^(t|sh|r|s|v|w)$")) {
+        else if (letter.match("^(t|sh|r|s|v|w)$")) {
             type = 3, r = globalR * 1.3, d = mcR * 1.1;
             newCircle = new Circle(owner, type, subtype, d, r, angle);
         }
-        if (letter.match("^(th|y|z|ng|qu|x)$")) {
+        else if (letter.match("^(th|y|z|ng|qu|x)$")) {
             type = 4, r = globalR, d = mcR;
             newCircle = new Circle(owner, type, subtype, d, r, angle);
         }
-        if (letter.match("(a|e|i|o|u)")) {
+        else if (letter.match("^(a|e|i|o|u)$")) {
             nLines = [0, 0, 1, 0, 1][subtype - 1];
             var previous = owner.children[owner.children.length - 1];
             r = globalR * 0.25;
