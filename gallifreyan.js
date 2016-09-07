@@ -170,9 +170,9 @@ function Circle(owner, type, subtype, d, r, a) {
             drawCircle(this.x, this.y, this.r);
         }
 
-        if (this.isConsonant && (this.subtype === 2 || this.subtype === 3)) {  //drawing the dots
+        if (this.dots) {  //drawing the dots
             var dotR = 3 + lineWidth / 2, r = this.r - 1 - 3 * dotR, delta = (0.2 * this.owner.r / this.r);
-            for (var i = -1; i < this.subtype - 1; i++)
+            for (var i = -1; i < this.dots - 1; i++)
                 drawDot(this.x - Math.cos(this.a + delta * i) * r, this.y - Math.sin(this.a + delta * i) * r, dotR);
         }
         if (dirtyRender && this.selectable)
@@ -201,6 +201,8 @@ function Circle(owner, type, subtype, d, r, a) {
     this.isVowel = this.type === 5 || this.type === 6;
     this.isConsonant = ! this.isVowel;
     this.hasGaps = this.type === 1 || this.type === 3;
+
+    this.dots = this.isConsonant ? [null, 0, 2, 3, 0, 0, 0][this.subtype] : 0;
 
     this.nLines = 0;        //expected number of lines, according to rules
     this.lines = [];
