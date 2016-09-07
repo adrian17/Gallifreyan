@@ -148,7 +148,7 @@ function Circle(owner, type, subtype, d, r, a) {
             var angles = [];                        //a list of intersections with these letters
             for (var i = 0; i < this.children.length; ++i) {
                 var child = this.children[i];
-                if (child.type === 3 || child.type === 1) {
+                if (child.hasGaps) {
                     var d, an;
                     d = dist(this.x, this.y, child.x, child.y);
                     an = Math.acos((child.r * child.r - d * d - this.r * this.r) / (-2 * d * this.r));
@@ -160,7 +160,7 @@ function Circle(owner, type, subtype, d, r, a) {
                 drawArc(this.x, this.y, this.r, angles[i % angles.length], angles[i - 1]);
             }
         }
-        else if (this.type === 3 || this.type === 1) {      //so it's not a wordCircle; now let's check if it's a B- or T- row letter
+        else if (this.hasGaps) {      //so it's not a wordCircle; now let's check if it's a B- or T- row letter
             var d, an;
             d = dist(this.x, this.y, this.owner.x, this.owner.y);
             an = Math.acos((this.owner.r * this.owner.r - d * d - this.r * this.r) / (-2 * d * this.r)); an = (PI / 2 - an)
@@ -200,6 +200,7 @@ function Circle(owner, type, subtype, d, r, a) {
 
     this.isVowel = this.type === 5 || this.type === 6;
     this.isConsonant = ! this.isVowel;
+    this.hasGaps = this.type === 1 || this.type === 3;
 
     this.nLines = 0;        //expected number of lines, according to rules
     this.lines = [];
@@ -577,12 +578,12 @@ function createLines() {
                 if (isLineTooClose(circle2, intersection.a - rand)) continue;
 
                 //let's just check if we don't run into a white section of a circle
-                if (circle.type === 1 || circle.type === 3) {
+                if (circle.hasGaps) {
                     var x = circle.x + circle.r * Math.cos(angle + rand), y = circle.y + circle.r * Math.sin(angle + rand);
                     var data = ctx.getImageData(Math.floor(x), Math.floor(y), 1, 1).data;
                     if (!(data[0] != 255 && data[1] != 255 && data[2] != 255 && data[3] > 0)) continue;
                 }
-                if (circle2.type === 1 || circle2.type === 3) {
+                if (circle2.hasGaps) {
                     x = circle2.x + circle2.r * Math.cos(intersection.a - rand), y = circle2.y + circle2.r * Math.sin(intersection.a - rand);
                     data = ctx.getImageData(Math.floor(x), Math.floor(y), 1, 1).data;
                     if (!(data[0] != 255 && data[1] != 255 && data[2] != 255 && data[3] > 0)) continue;
