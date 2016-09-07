@@ -34,6 +34,10 @@ Array.prototype.removeItem = function(item) {
     return index > -1 ? this.remove(index) : this;
 };
 
+Number.prototype.clamp = function(min, max) {
+    return Math.min(Math.max(this, min), max);
+};
+
 //math
 function dist(a, b, x, y) { return Math.sqrt(Math.pow((a - x), 2) + Math.pow((b - y), 2)) }
 function normalizeAngle(angle) { while (angle > PI) angle -= 2 * PI; while (angle < -PI) angle += 2 * PI; return angle }    //caps to (-PI, PI)
@@ -262,38 +266,33 @@ function correctCircleLocation(selected, d, a) {
     if (!snapMode) { selected.update(d, a); return; }
     switch (selected.type) {
         case 1:     //B-row
-            if (d > selected.owner.r - selected.r * 0.5) d = selected.owner.r - selected.r * 0.5;
-            if (d < selected.owner.r - selected.r + 1) d = selected.owner.r - selected.r + 1;
+            d = d.clamp(selected.owner.r - selected.r + 1, selected.owner.r - selected.r * 0.5);
             break;
         case 2:     //J-row
-            if (d > selected.owner.r - selected.r - 5) d = selected.owner.r - selected.r - 5;
+            d = d.clamp(0, selected.owner.r - selected.r - 5);
             break;
         case 3:     //T-row
-            if (d > selected.owner.r + selected.r * 0.8) d = selected.owner.r + selected.r * 0.8;
-            if (d < selected.owner.r) d = selected.owner.r;
+            d = d.clamp(selected.owner.r, selected.owner.r + selected.r * 0.8);
             break;
         case 4:     //TH-row
             d = selected.owner.r;
             break;
         case 5:     //vowels, laying on a wordCircle
             switch (selected.subtype) {
-                case 1: if (d < selected.owner.r + selected.r) d = selected.owner.r + selected.r; break;
+                case 1: d = d.clamp(selected.owner.r + selected.r, Infinity); break;
                 case 2:
                 case 3:
                 case 5:
                     d = selected.owner.r; break;
-                case 4: if (d > selected.owner.r - selected.r) d = selected.owner.r - selected.r; break;
+                case 4: d = d.clamp(0, selected.owner.r - selected.r); break;
             } break;
         case 6:     //vowels, connected to consonants
             switch (selected.subtype) {
                 case 1:
-                    if (selected.owner.type === 1) { if (d < selected.r * 2) d = selected.r * 2; a = selected.owner.a; }
-                    if (selected.owner.type === 2) { if (d < selected.owner.r + selected.r) d = selected.owner.r + selected.r; a = selected.owner.a; }
-                    if (selected.owner.type === 3) { if (d < selected.owner.r / 2) d = selected.owner.r / 2; a = selected.owner.a; }
-                    if (selected.owner.type === 4) {
-                        if (d < selected.r) d = selected.r;
-                        if (d > selected.owner.r - selected.r) d = selected.owner.r - selected.r; a = selected.owner.a;
-                    }
+                    if (selected.owner.type === 1) { d = d.clamp(selected.r * 2, Infinity); a = selected.owner.a; }
+                    if (selected.owner.type === 2) { d = d.clamp(selected.owner.r + selected.r, Infinity); a = selected.owner.a; }
+                    if (selected.owner.type === 3) { d = d.clamp(selected.owner.r / 2, Infinity); a = selected.owner.a; }
+                    if (selected.owner.type === 4) { d = d.clamp(selected.r, selected.owner.r - selected.r); a = selected.owner.a; }
                     break;
                 case 2:
                 case 3:
@@ -328,7 +327,7 @@ $('canvas').mousemove(function(e) {
                     currentCircle.children[index - 1].a);
             if (nextAngle > previousAngle) { a > 0 ? previousAngle += 2 * PI : nextAngle -= 2 * PI; }   //still buggy
             if (a - nextAngle > 2 * PI || a - previousAngle > 2 * PI) a -= 2 * PI; if (a - nextAngle < -2 * PI || a - previousAngle < -2 * PI) a += 2 * PI;
-            if (a < nextAngle) a = nextAngle; else if (a > previousAngle) a = previousAngle;
+            a = a.clamp(nextAngle, previousAngle);
         }
         correctCircleLocation(selected, d, a);
         redraw();
@@ -360,9 +359,9 @@ $('canvas').mousewheel(function(event, delta, deltaX, deltaY) {
         if (delta > 0 || deltaX > 0 || deltaY > 0) selected.r += 2; else selected.r -= 2;
 
         if (selected.isVowel)
-            selected.r = selected.r < 10 ? 10 : selected.r;
+            selected.r = selected.r.clamp(10, Infinity);
         else
-            selected.r = selected.r < selected.owner.r * 0.1 ? selected.owner.r * 0.1 : selected.r;
+            selected.r = selected.r.clamp(selected.owner.r * 0.1, Infinity);
 
         for (var i = 0; i < selected.children.length; i++) {
             selected.children[i].r *= (selected.r / oldR);
