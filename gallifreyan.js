@@ -24,10 +24,9 @@ Array.prototype.contains = function(k) {
     return (this.indexOf(k) != -1);
 }
 
-Array.prototype.remove = function(from, to) {   //based on http://ejohn.org/blog/javascript-array-remove/
-    var rest = this.slice((to || from) + 1 || this.length);
-    this.length = from < 0 ? this.length + from : from;
-    return this.push.apply(this, rest);
+Array.prototype.remove = function(index) {
+    this.splice(index, 1);
+    return this;
 };
 
 Array.prototype.removeItem = function(item) {
@@ -121,7 +120,7 @@ function Line(circle1, a1, circle2, a2) {
     }
     this.updatePoint = function(end, circle, a) {
         var point = this.points[end];
-        point.circle.lines.remove(point.circle.lines.indexOf(this));
+        point.circle.lines.removeItem(this);
         point.circle = circle; circle.lines.push(this);
         point.a = a;
         this.update();
