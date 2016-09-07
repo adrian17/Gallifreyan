@@ -31,10 +31,11 @@ function Button(x, y, width, text, f) {
 function createGUI() {
     buttons.push(new Button(0, 0, 60, "save", function() { createFinalImage(); }));
     buttons.push(new Button(800 - 170, 0, 110, "line width", function() { }));
+    buttons.push(new Button(800 - 170, 30, 170, "delete line", function() { deleteLineMode = true; redraw(); }));
     buttons.push(new Button(800 - 60, 0, 30, "+",
         function() { lineWidth += 0.5; redraw(); }
     ));
-    buttons.push(new Button(800 - 30, 0, 30, "-",
+    buttons.push(new Button(800 - 30, 0, 30, "−",
         function() { lineWidth -= 0.5; if (lineWidth < 0.5) lineWidth = 0.5; redraw(); }
     ));
 }
