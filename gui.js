@@ -35,7 +35,7 @@ function createGUI() {
     buttons.push(new Button(800 - 60, 0, 30, "+",
         function() { lineWidth += 0.5; redraw(); }
     ));
-    buttons.push(new Button(800 - 30, 0, 30, "-",
+    buttons.push(new Button(800 - 30, 0, 30, "−",
         function() { lineWidth -= 0.5; if (lineWidth < 0.5) lineWidth = 0.5; redraw(); }
     ));
 }
