@@ -170,7 +170,7 @@ function Circle(owner, type, subtype, d, r, a) {
             drawCircle(this.x, this.y, this.r);
         }
 
-        if (this.type < 5 && (this.subtype === 2 || this.subtype === 3)) {  //drawing the dots
+        if (this.isConsonant && (this.subtype === 2 || this.subtype === 3)) {  //drawing the dots
             var dotR = 3 + lineWidth / 2, r = this.r - 1 - 3 * dotR, delta = (0.2 * this.owner.r / this.r);
             for (var i = -1; i < this.subtype - 1; i++)
                 drawDot(this.x - Math.cos(this.a + delta * i) * r, this.y - Math.sin(this.a + delta * i) * r, dotR);
@@ -197,6 +197,10 @@ function Circle(owner, type, subtype, d, r, a) {
     this.owner = owner;
     this.children = [];
     this.type = type; this.subtype = subtype;
+
+    this.isVowel = this.type === 5 || this.type === 6;
+    this.isConsonant = ! this.isVowel;
+
     this.nLines = 0;        //expected number of lines, according to rules
     this.lines = [];
     this.selectable = true;
@@ -352,7 +356,7 @@ $('canvas').mousewheel(function(event, delta, deltaX, deltaY) {
         var oldR = selected.r;
         if (delta > 0 || deltaX > 0 || deltaY > 0) selected.r += 2; else selected.r -= 2;
 
-        if (selected.type >= 5)
+        if (selected.isVowel)
             selected.r = selected.r < 10 ? 10 : selected.r;
         else
             selected.r = selected.r < selected.owner.r * 0.1 ? selected.owner.r * 0.1 : selected.r;
@@ -475,7 +479,7 @@ function generateWord(word, wordL, mcR, dist, mainAngle) {
                 newCircle = new Circle(owner, type, subtype, owner.r, r, angle);
                 angle += delta / 2;
             }
-            else if (previous && i != 0 && previous.type < 5 && previous.children.length === 0) {   //are we free to attach?
+            else if (previous && i != 0 && previous.isConsonant && previous.children.length === 0) {   //are we free to attach?
                 type = 6;
                 owner = previous;
                 angle += delta;
@@ -520,7 +524,7 @@ function createLines() {
         var passes = 0;
         while (circle.lines.length < circle.nLines) {
             //looks for the best path to the base circle if there are no other options left
-            if (passes > 100 || (circle.type >= 5 && circle.subtype === 5)) {
+            if (passes > 100 || (circle.isVowel && circle.subtype === 5)) {
                 if (circle.type === 6) { if (circle.subtype === 3) var angle = circle.owner.a + PI; else angle = circle.owner.a; }
                 else if (circle.type === 5 && circle.subtype === 5) angle = circle.a;
                 else angle = circle.a + PI;
@@ -551,7 +555,7 @@ function createLines() {
                 var x = circle.x + circle.r * Math.cos(bestAngle), y = circle.y + circle.r * Math.sin(bestAngle);
                 intersection = findIntersection(circle2.x, circle2.y, circle2.r, x, y, bestAngle);
                 lines.push(new Line(circle, bestAngle, circle2, intersection.a));
-                if (circle.type >= 5) break;
+                if (circle.isVowel) break;
                 else continue;
             }
             //normal routine, searches for pairs that still need circles
@@ -559,7 +563,7 @@ function createLines() {
                 if (j === i) continue;
                 circle2 = allCircles[j];
                 if (circle2.lines.length >= circle2.nLines) continue;
-                if (circle2.type >= 5 && circle2.subtype === 5) continue;
+                if (circle2.isVowel && circle2.subtype === 5) continue;
                 angle = Math.atan2(circle2.y - circle.y, circle2.x - circle.x);
                 var x = circle.x + circle.r * Math.cos(angle), y = circle.y + circle.r * Math.sin(angle);
 
