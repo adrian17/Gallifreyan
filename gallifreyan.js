@@ -399,7 +399,7 @@ function generateWords(words) {
 
     var delta = 2 * PI / words.length;
     var angle = PI / 2;
-    var r = words.length === 1 ? outerR * 0.8 : 1.7 * outerR / (words.length + 2);
+    var r = words.length === 1 ? outerR * 0.8 : 2.5 * outerR / (words.length + 4);
     var d = words.length === 1 ? 0 : outerR - r * 1.2;
 
     for (var i = 0; i < words.length; i++) {
