@@ -42,6 +42,12 @@ Number.prototype.clamp = function(min, max) {
 function dist(a, b, x, y) { return Math.sqrt(Math.pow((a - x), 2) + Math.pow((b - y), 2)) }
 function normalizeAngle(angle) { while (angle > PI) angle -= 2 * PI; while (angle < -PI) angle += 2 * PI; return angle }    //caps to (-PI, PI)
 
+function angleBetweenCircles(circle, second) {
+    var d = dist(circle.x, circle.y, second.x, second.y);
+    var angle = Math.acos((second.r*second.r - d*d - circle.r*circle.r) / (-2*d*circle.r));
+    return angle;
+}
+
 //since we are drawing mostly circles, it's not like we need control over beginPath() and stroke() anyway
 function drawCircle(x, y, r) { ctx.beginPath(); ctx.arc(x, y, r, 0, PI * 2); ctx.stroke(); }
 function drawArc(x, y, r, a1, a2) { ctx.beginPath(); ctx.arc(x, y, r, a1, a2); ctx.stroke(); }
@@ -153,9 +159,7 @@ function Circle(owner, type, subtype, d, r, a) {
             for (var i = 0; i < this.children.length; ++i) {
                 var child = this.children[i];
                 if (child.hasGaps) {
-                    var d, an;
-                    d = dist(this.x, this.y, child.x, child.y);
-                    an = Math.acos((child.r * child.r - d * d - this.r * this.r) / (-2 * d * this.r));
+                    var an = angleBetweenCircles(this, child);
                     angles.push(child.a + an, child.a - an);
                 }
             }
@@ -165,10 +169,8 @@ function Circle(owner, type, subtype, d, r, a) {
             }
         }
         else if (this.hasGaps) {      //so it's not a wordCircle; now let's check if it's a B- or T- row letter
-            var d, an;
-            d = dist(this.x, this.y, this.owner.x, this.owner.y);
-            an = Math.acos((this.owner.r * this.owner.r - d * d - this.r * this.r) / (-2 * d * this.r)); an = (PI / 2 - an)
-            drawArc(this.x, this.y, this.r, this.a + PI / 2 + an, this.a + 3 / 2 * PI - an);
+            var an = angleBetweenCircles(this, this.owner);
+            drawArc(this.x, this.y, this.r, this.a + PI - an, this.a + PI + an);
         }
         else {                                      //if not, we can just draw a circle there
             drawCircle(this.x, this.y, this.r);
