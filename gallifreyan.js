@@ -518,6 +518,13 @@ function isLineTooClose(circle, angle) {
     return 0;
 }
 
+function isPixelWhite(x, y) {
+    // note: x, y are window coords, not world coords (unless zoom==1)
+    var data = ctx.getImageData(Math.floor(x), Math.floor(y), 1, 1).data;
+    // actually, the default "white" on canvas is transparent black
+    return data[0] === 0 && data[1] === 0 && data[2] === 0 && data[3] === 0;
+}
+
 //generates the lines after all the circles are created
 function createLines() {
     var i, j, k, circle, circle2, intersection, angle;
@@ -582,14 +589,16 @@ function createLines() {
 
                 //let's just check if we don't run into a white section of a circle
                 if (circle.hasGaps) {
-                    var x = circle.x + circle.r * Math.cos(angle + rand), y = circle.y + circle.r * Math.sin(angle + rand);
-                    var data = ctx.getImageData(Math.floor(x), Math.floor(y), 1, 1).data;
-                    if (!(data[0] != 255 && data[1] != 255 && data[2] != 255 && data[3] > 0)) continue;
+                    var x = circle.x + circle.r * Math.cos(angle + rand);
+                    var y = circle.y + circle.r * Math.sin(angle + rand);
+                    if (isPixelWhite(x, y))
+                        continue;
                 }
                 if (circle2.hasGaps) {
-                    x = circle2.x + circle2.r * Math.cos(intersection.a - rand), y = circle2.y + circle2.r * Math.sin(intersection.a - rand);
-                    data = ctx.getImageData(Math.floor(x), Math.floor(y), 1, 1).data;
-                    if (!(data[0] != 255 && data[1] != 255 && data[2] != 255 && data[3] > 0)) continue;
+                    var x = circle2.x + circle2.r * Math.cos(intersection.a - rand);
+                    var y = circle2.y + circle2.r * Math.sin(intersection.a - rand);
+                    if (isPixelWhite(x, y))
+                        continue;
                 }
                 //nothing more to check, let's make a line there
                 lines.push(new Line(circle, angle + rand, circle2, intersection.a - rand));
