@@ -77,10 +77,6 @@ $(document).on("contextmenu", "canvas", function(e) {
 function createFinalImage() {
     dirtyRender = 0;
     redraw();
-    var imgData = ctx.getImageData(0, 0, canvasSize, canvasSize);
-    for (var i = 0; i < imgData.data.length; i += 4)
-        if (imgData.data[i] > 64 && imgData.data[i + 1] > 64 && imgData.data[i + 2] > 64) imgData.data[i + 3] = 0;	//converts white to transparency
-    ctx.putImageData(imgData, 0, 0);
     var dataURL = canvas.toDataURL();
     window.open(dataURL);
     dirtyRender = 1;
