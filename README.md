@@ -19,7 +19,6 @@ The project is based on Sherman's Circular Gallifreyan, for more information abo
 
 ####features:
 - doubled vowels/consonants
-- manual addition of lines
 - manually detach/reattach merged circles
 ...
 - support for punctuation, numbers?

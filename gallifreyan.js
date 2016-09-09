@@ -20,6 +20,10 @@ var dirtyRender     = true; //whether GUI and red dots will be drawn
 
 var deleteLineMode  = false;//whether next selected line will be deleted
 
+// Both ends of a line move with a cursor. It looks like you're placing the first end of the line.
+// A click will disable this mode, and you'll normally control the other end of the line.
+var addLineMode     = false;
+
 Array.prototype.contains = function(k) {
     return (this.indexOf(k) != -1);
 }
@@ -98,6 +102,23 @@ function updateText() {
     generateWords(words);
 }
 
+//discard any unfinished manual actions (line addition/deletion)
+function resetModes() {
+    deleteLineMode  = false;
+    if (addLineMode) {
+        addLineMode = false;
+        deleteLine(selectedLine);
+        selectedLine = null;
+    }
+}
+
+//create a new line and let user to position it
+function addNewLine() {
+    addLineMode = true;
+    selectedLine = new Line(allCircles[0], -PI/2, allCircles[0], -PI/2);
+    lines.push(selectedLine);
+}
+
 //disconnect the line from both circles it's connected to, and remove it from the global list
 function deleteLine(line) {
     line.points[0].circle.lines.removeItem(line);
@@ -112,7 +133,7 @@ function Line(circle1, a1, circle2, a2) {
         ctx.strokeStyle = (selectedLine === this) ? "grey" : "black";
         drawLine(this.points[0].x, this.points[0].y, this.points[1].x, this.points[1].y)
         if (dirtyRender && this.selectable) {
-            if (deleteLineMode) {
+            if (deleteLineMode || (addLineMode && selectedLine === this)) {
                 drawBigRedDot(this.points[0].x, this.points[0].y);
                 drawBigRedDot(this.points[1].x, this.points[1].y);
             } else {
@@ -221,7 +242,7 @@ function Circle(owner, type, subtype, d, r, a) {
 function doClick(e) {
     var mouse = getMouse(e);
     if (selectedCircle != null) { selectedCircle = null; redraw(); return; }
-    if (selectedLine != null) { selectedLine = null; redraw(); return; }
+    if (selectedLine != null && !addLineMode) { selectedLine = null; redraw(); return; }
 
     for (var i = 0; i < buttons.length; ++i) {
         if (buttons[i].click(e)) return;
@@ -261,6 +282,8 @@ function doClick(e) {
         deleteLineMode = false;
         redraw();
     }
+    if (addLineMode)
+        addLineMode = false;	//don't move both ends anymore; now it's a normal selectedLine with one attached end
 };
 
 //makes sure that the correct distance from the base circle is kept according to language rules
@@ -345,6 +368,8 @@ $('canvas').mousemove(function(e) {
                 minD = d;
                 a = Math.atan2(mouse.y - allCircles[i].y, mouse.x - allCircles[i].x);
                 selected.updatePoint(lineEnd, allCircles[i], a);
+                if (addLineMode)
+                    selected.updatePoint((lineEnd+1) % 2, allCircles[i], a);	//moving both ends at once looks like a single red dot
             }
         }
         redraw();
