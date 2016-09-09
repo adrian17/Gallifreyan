@@ -15,6 +15,7 @@ function Button(x, y, width, text, f) {
         var clickX = e.pageX - $('canvas').position().left, clickY = e.pageY - $('canvas').position().top;
         clickX = clickX * canvasScale, clickY = clickY * canvasScale;
         if (clickX > this.x && clickX < this.x + this.width && clickY > this.y && clickY < this.y + this.height) {
+            resetModes();	//discard unfinished edits when toggling a new button
             this.f();
             return 1;
         }
@@ -32,6 +33,7 @@ function createGUI() {
     buttons.push(new Button(0, 0, 60, "save", function() { createFinalImage(); }));
     buttons.push(new Button(800 - 170, 0, 110, "line width", function() { }));
     buttons.push(new Button(800 - 170, 30, 170, "delete line", function() { deleteLineMode = true; redraw(); }));
+    buttons.push(new Button(800 - 170, 60, 170, "add line", function() { addNewLine(); redraw(); }));
     buttons.push(new Button(800 - 60, 0, 30, "+",
         function() { lineWidth += 0.5; redraw(); }
     ));
