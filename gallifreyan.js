@@ -344,6 +344,13 @@ $('canvas').mousemove(function(e) {
             if (d < minD) {
                 minD = d;
                 a = Math.atan2(mouse.y - allCircles[i].y, mouse.x - allCircles[i].x);
+                var x = allCircles[i].x + allCircles[i].r * Math.cos(a);
+                var y = allCircles[i].y + allCircles[i].r * Math.sin(a);
+                var windowCoords = asWindowCoords(x, y);
+                console.log(x, y);
+                console.log(windowCoords);
+                //if (isPixelWhite(windowCoords.x, windowCoords.y))
+                //   continue;
                 selected.updatePoint(lineEnd, allCircles[i], a);
             }
         }

@@ -63,6 +63,14 @@ function getMouse(e) {
     return { x: mouseX, y: mouseY };
 }
 
+function asWindowCoords(x, y) {
+    var data = scrollerObj.getValues();
+    var newX = x * data.zoom / canvasScale - data.left
+    var newY = y * data.zoom / canvasScale - data.top;
+    console.log(data.zoom, canvasScale, data.left, data.top);
+    return { x: newX, y: newY };
+}
+
 $('canvas').mousewheel(function(e, delta, deltaX, deltaY) {
     if (selectedCircle) return;
     scrollerObj.doMouseZoom(-delta * 3, e.timeStamp, e.pageX, e.pageY);
