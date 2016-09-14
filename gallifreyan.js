@@ -430,8 +430,6 @@ function generateWords(words) {
     var d = words.length === 1 ? 0 : outerR - r * 1.2;
 
     for (var i = 0; i < words.length; i++) {
-        if (i > 0) angle -= delta; angle = normalizeAngle(angle);
-
         var word = words[i];
         var wordL = 0;  //approximates the number of letters, taking into account that some will be merged
         for (var j = 0; j < word.length; j++) {
@@ -439,6 +437,8 @@ function generateWords(words) {
             wordL++;
         }
         generateWord(word, wordL, r, d, angle)
+
+        angle -= delta; angle = normalizeAngle(angle);
     }
     redraw();
 
@@ -475,8 +475,6 @@ function generateWord(word, wordL, mcR, dist, mainAngle) {
         var letter = word[i];
         newCircle = 0;
         owner = newMainCircle;
-
-        if (i > 0) angle -= delta; angle = normalizeAngle(angle);
 
         var type = 0, r = 0, d = 0;
         var subtype = map[letter];
@@ -527,6 +525,8 @@ function generateWord(word, wordL, mcR, dist, mainAngle) {
         owner.children.push(newCircle);
 
         allCircles.push(newCircle);
+
+        angle -= delta; angle = normalizeAngle(angle);
     }
 }
 
