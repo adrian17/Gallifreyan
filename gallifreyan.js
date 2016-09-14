@@ -43,11 +43,11 @@ Number.prototype.clamp = function(min, max) {
 };
 
 //math
-function dist(a, b, x, y) { return Math.sqrt(Math.pow((a - x), 2) + Math.pow((b - y), 2)) }
+function dist(a, b) { return Math.sqrt(Math.pow((a.x - b.x), 2) + Math.pow((a.y - b.y), 2)) }
 function normalizeAngle(angle) { while (angle > PI) angle -= 2 * PI; while (angle < -PI) angle += 2 * PI; return angle }    //caps to (-PI, PI)
 
 function angleBetweenCircles(circle, second) {
-    var d = dist(circle.x, circle.y, second.x, second.y);
+    var d = dist(circle, second);
     var angle = Math.acos((second.r*second.r - d*d - circle.r*circle.r) / (-2*d*circle.r));
     return angle;
 }
@@ -252,7 +252,7 @@ function doClick(e) {
     var minD = 40;
     for (i = 0; i < allCircles.length; ++i) {
         if (!allCircles[i].selectable) continue;
-        var d = dist(allCircles[i].x, allCircles[i].y, mouse.x, mouse.y);
+        var d = dist(allCircles[i], mouse);
         if (d < minD) {
             minD = d;
             selectedCircle = allCircles[i];
@@ -263,7 +263,7 @@ function doClick(e) {
     for (i = 0; i < lines.length; ++i) {
         if (!lines[i].selectable) continue;
         for (j = 0; j < 2; ++j) {
-            var d = dist(lines[i].points[j].x, lines[i].points[j].y, mouse.x, mouse.y);
+            var d = dist(lines[i].points[j], mouse);
             if (d < minD) {
                 minD = d;
                 selectedLine = lines[i];
@@ -341,7 +341,7 @@ $('canvas').mousemove(function(e) {
         var selected = selectedCircle;
         var a = Math.atan2(mouse.y - selected.owner.y, mouse.x - selected.owner.x);
         a = normalizeAngle(a);
-        var d = dist(mouse.x, mouse.y, selected.owner.x, selected.owner.y);
+        var d = dist(mouse, selected.owner);
         if (selected.type != 6 && currentCircle.children.length > 2) {
             var index = currentCircle.children.indexOf(selectedCircle);
             var nextAngle = (index + 1 >= currentCircle.children.length ?
@@ -363,7 +363,7 @@ $('canvas').mousemove(function(e) {
         var selected = selectedLine;
         var minD = 50;
         for (i = 0; i < allCircles.length; ++i) {
-            var d = dist(mouse.x, mouse.y, allCircles[i].x, allCircles[i].y) - allCircles[i].r; d = Math.abs(d);
+            var d = Math.abs(dist(mouse, allCircles[i]) - allCircles[i].r);
             if (d < minD) {
                 minD = d;
                 a = Math.atan2(mouse.y - allCircles[i].y, mouse.x - allCircles[i].x);
