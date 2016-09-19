@@ -531,9 +531,9 @@ function isLineTooClose(circle, angle) {
     for (var line of circle.lines) {
         var diff;
         diff = normalizeAngle(line.points[0].a - angle); diff = Math.abs(diff);
-        if (line.points[0].circle === circle && diff < 0.5) return 1;
+        if (line.points[0].circle === circle && diff < 0.1) return 1;
         diff = normalizeAngle(line.points[1].a - angle); diff = Math.abs(diff);
-        if (line.points[1].circle === circle && diff < 0.5) return 1;
+        if (line.points[1].circle === circle && diff < 0.1) return 1;
     }
     return 0;
 }
@@ -548,6 +548,7 @@ function isPixelWhite(x, y) {
 //generates the lines after all the circles are created
 function createLines() {
     var i, j, k, circle, circle2, intersection, angle;
+    // note: currently bestAngle is not reset. That means a new line may happen to have the same angle as a previous one
     var bestAngle = 0, inter, minInter;
     for (i = 1; i < allCircles.length; ++i) {
         circle = allCircles[i];
