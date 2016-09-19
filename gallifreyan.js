@@ -81,23 +81,23 @@ function updateText() {
     var text = $('input').val().trim().toLowerCase().split(" ");
     localStorage.setItem("input", $('input').val());
     var words = [];
-    for (var j = 0; j < text.length; j++) {
-        var toParse = text[j];
-        words.push([]);
+    for (var toParse of text) {
+        var word = [];
         for (var i = 0; i < toParse.length; i++) {
             if (toParse.substring(i, i + 2).match("(ch|sh|th|ng|qu)")) {
-                words[j].push(toParse.substring(i, i + 2));
+                word.push(toParse.substring(i, i + 2));
                 i++;
             } else if (toParse[i] === "c") {
                 //soft c comes usually before i, e or y
                 if (i+1 < toParse.length && toParse[i+1].match("[iey]"))
-                    words[j].push("s");
+                    word.push("s");
                 else
-                    words[j].push("k");
+                    word.push("k");
             } else {
-                words[j].push(toParse[i]);
+                word.push(toParse[i]);
             }
         }
+        words.push(word);
     }
     generateWords(words);
 }
@@ -143,8 +143,7 @@ function Line(circle1, a1, circle2, a2) {
         }
     }
     this.update = function() {
-        for (var i = 0; i < 2; ++i) {
-            var point = this.points[i];
+        for (var point of this.points) {
             point.x = point.circle.x + point.circle.r * Math.cos(point.a);
             point.y = point.circle.y + point.circle.r * Math.sin(point.a);
         }
@@ -177,8 +176,7 @@ function Circle(owner, type, subtype, d, r, a) {
 
         if (wordCircles.contains(this)) {           //it's a wordCircle so we need to make a gap for B- and T- row letters
             var angles = [];                        //a list of intersections with these letters
-            for (var i = 0; i < this.children.length; ++i) {
-                var child = this.children[i];
+            for (var child of this.children) {
                 if (child.hasGaps) {
                     var an = angleBetweenCircles(this, child);
                     angles.push(child.a + an, child.a - an);
@@ -207,19 +205,18 @@ function Circle(owner, type, subtype, d, r, a) {
     }
 
     this.update = function(d, a) {      //recalculates the position, forces other circles/lines connected to it to update too
-        var dx, dy;
         var oldA = this.a;
-        dx = Math.cos(a) * (d), dy = Math.sin(a) * (d);
+        var dx = Math.cos(a) * (d), dy = Math.sin(a) * (d);
         this.x = this.owner.x + dx; this.y = this.owner.y + dy; this.d = d;
         this.a = normalizeAngle(a);
-        for (var i = 0; i < this.children.length; i++) {
+        for (var child of this.children) {
             if (wordCircles.contains(this))
-                this.children[i].update(this.children[i].d, this.children[i].a);
+                child.update(child.d, child.a);
             else
-                this.children[i].update(this.children[i].d, this.children[i].a - oldA + this.a);
+                child.update(child.d, child.a - oldA + this.a);
         }
-        for (var i = 0; i < this.lines.length; i++)
-            this.lines[i].update();
+        for (var line of this.lines)
+            line.update();
     }
     this.owner = owner;
     this.children = [];
@@ -244,29 +241,28 @@ function doClick(e) {
     if (selectedCircle != null) { selectedCircle = null; redraw(); return; }
     if (selectedLine != null && !addLineMode) { selectedLine = null; redraw(); return; }
 
-    for (var i = 0; i < buttons.length; ++i) {
-        if (buttons[i].click(e)) return;
+    for (var button of buttons) {
+        if (button.click(e)) return;
     }
 
-    var i, j, k;
     var minD = 40;
-    for (i = 0; i < allCircles.length; ++i) {
-        if (!allCircles[i].selectable) continue;
-        var d = dist(allCircles[i], mouse);
+    for (var circle of allCircles) {
+        if (!circle.selectable) continue;
+        var d = dist(circle, mouse);
         if (d < minD) {
             minD = d;
-            selectedCircle = allCircles[i];
+            selectedCircle = circle;
             if (selectedCircle.type === 6) currentCircle = selectedCircle.owner.owner;
             else currentCircle = selectedCircle.owner;
         }
     }
-    for (i = 0; i < lines.length; ++i) {
-        if (!lines[i].selectable) continue;
-        for (j = 0; j < 2; ++j) {
-            var d = dist(lines[i].points[j], mouse);
+    for (var line of lines) {
+        if (!line.selectable) continue;
+        for (var j = 0; j < 2; ++j) {
+            var d = dist(line.points[j], mouse);
             if (d < minD) {
                 minD = d;
-                selectedLine = lines[i];
+                selectedLine = line;
                 lineEnd = j;
             }
         }
@@ -330,8 +326,8 @@ function correctCircleLocation(selected, d, a) {
             } break;
     }
     selected.update(d, a);
-    for (var i = 0; i < selected.children.length; i++)
-        correctCircleLocation(selected.children[i], selected.children[i].d, selected.children[i].a);
+    for (var child of selected.children)
+        correctCircleLocation(child, child.d, child.a);
 }
 
 function getCircleAngleLimits(circle) {
@@ -365,18 +361,17 @@ $('canvas').mousemove(function(e) {
         redraw();
         return;
     }
-    var i, a;
     if (selectedLine != null) {
         var selected = selectedLine;
         var minD = 50;
-        for (i = 0; i < allCircles.length; ++i) {
-            var d = Math.abs(dist(mouse, allCircles[i]) - allCircles[i].r);
+        for (var circle of allCircles) {
+            var d = Math.abs(dist(mouse, circle) - circle.r);
             if (d < minD) {
                 minD = d;
-                a = Math.atan2(mouse.y - allCircles[i].y, mouse.x - allCircles[i].x);
-                selected.updatePoint(lineEnd, allCircles[i], a);
+                var a = Math.atan2(mouse.y - circle.y, mouse.x - circle.x);
+                selected.updatePoint(lineEnd, circle, a);
                 if (addLineMode)
-                    selected.updatePoint((lineEnd+1) % 2, allCircles[i], a);	//moving both ends at once looks like a single red dot
+                    selected.updatePoint((lineEnd+1) % 2, circle, a);	//moving both ends at once looks like a single red dot
             }
         }
         redraw();
@@ -397,9 +392,9 @@ $('canvas').mousewheel(function(event, delta, deltaX, deltaY) {
         else
             selected.r = selected.r.clamp(selected.owner.r * 0.1, Infinity);
 
-        for (var i = 0; i < selected.children.length; i++) {
-            selected.children[i].r *= (selected.r / oldR);
-            selected.children[i].update(selected.children[i].d * (selected.r / oldR), selected.children[i].a);
+        for (var child of selected.children) {
+            child.r *= (selected.r / oldR);
+            child.update(child.d * (selected.r / oldR), child.a);
         }
         correctCircleLocation(selected, selected.d, selected.a);
         redraw();
@@ -430,8 +425,7 @@ function generateWords(words) {
     var r = words.length === 1 ? outerR * 0.8 : 2.5 * outerR / (words.length + 4);
     var d = words.length === 1 ? 0 : outerR - r * 1.2;
 
-    for (var i = 0; i < words.length; i++) {
-        var word = words[i];
+    for (var word of words) {
         var wordL = 0;  //approximates the number of letters, taking into account that some will be merged
         for (var j = 0; j < word.length; j++) {
             if (j > 0 && word[j].match("^(a|e|i|o|u)$") && !(word[j - 1].match("^(a|e|i|o|u)$"))) continue;
@@ -534,8 +528,8 @@ function generateWord(word, wordL, mcR, dist, mainAngle) {
 //checks if a line end is too close to an another line
 //will bug out around the PI=-PI point but let's ignore it for now
 function isLineTooClose(circle, angle) {
-    for (var i = 0; i < circle.lines.length; ++i) {
-        var diff, line = circle.lines[i];
+    for (var line of circle.lines) {
+        var diff;
         diff = normalizeAngle(line.points[0].a - angle); diff = Math.abs(diff);
         if (line.points[0].circle === circle && diff < 0.5) return 1;
         diff = normalizeAngle(line.points[1].a - angle); diff = Math.abs(diff);
@@ -660,9 +654,9 @@ function redraw() {
     }
     if (allCircles.length > 0) allCircles[0].draw();
 
-    for (var i = 0; i < lines.length; ++i) {
-        lines[i].draw();
-    }
+    for (var line of lines)
+        line.draw();
+
     if (selectedCircle != null && selectedCircle.type != 6) drawAngles();
 
     ctx.setTransform(1, 0, 0, 1, 0, 0);
