@@ -650,10 +650,8 @@ function redraw() {
     ctx.setTransform(data.zoom, 0, 0, data.zoom, -data.left * canvasScale, -data.top * canvasScale);
 
     ctx.lineWidth = lineWidth;
-    for (var i = 1; i < allCircles.length; ++i) {
-        allCircles[i].draw();
-    }
-    if (allCircles.length > 0) allCircles[0].draw();
+    for (var circle of allCircles)
+        circle.draw();
 
     for (var line of lines)
         line.draw();
