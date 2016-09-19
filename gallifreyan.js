@@ -334,6 +334,19 @@ function correctCircleLocation(selected, d, a) {
         correctCircleLocation(selected.children[i], selected.children[i].d, selected.children[i].a);
 }
 
+function getCircleAngleLimits(circle) {
+    var index = currentCircle.children.indexOf(circle);
+    // first/last letter of a word are limited to PI/2
+    var nextAngle = PI / 2;
+    var previousAngle = PI / 2;
+    if (index + 1 < currentCircle.children.length)
+        nextAngle = currentCircle.children[index + 1].a;
+    if (index >= 1)
+        previousAngle = currentCircle.children[index - 1].a;
+
+    return [nextAngle, previousAngle];
+}
+
 //manages the movement of circles and lines. In case of circles, correctCircleLocation() is called to enforce language rules
 $('canvas').mousemove(function(e) {
     var mouse = getMouse(e);
@@ -343,13 +356,7 @@ $('canvas').mousemove(function(e) {
         a = normalizeAngle(a);
         var d = dist(mouse, selected.owner);
         if (selected.type != 6 && currentCircle.children.length > 2) {
-            var index = currentCircle.children.indexOf(selectedCircle);
-            var nextAngle = (index + 1 >= currentCircle.children.length ?
-                    PI / 2 : //it's a last circle, so let's make sure it looks like the last one
-                    currentCircle.children[index + 1].a),
-                previousAngle = (index - 1 < 0 ?
-                    PI / 2 :    //it's first circle, so let's make sure it looks like the first one
-                    currentCircle.children[index - 1].a);
+            var [nextAngle, previousAngle] = getCircleAngleLimits(selectedCircle);
             if (nextAngle > previousAngle) { a > 0 ? previousAngle += 2 * PI : nextAngle -= 2 * PI; }   //still buggy
             if (a - nextAngle > 2 * PI || a - previousAngle > 2 * PI) a -= 2 * PI; if (a - nextAngle < -2 * PI || a - previousAngle < -2 * PI) a += 2 * PI;
             a = a.clamp(nextAngle, previousAngle);
@@ -404,13 +411,7 @@ $('canvas').mousewheel(function(event, delta, deltaX, deltaY) {
 function drawAngles() {
     if (currentCircle.children.length < 3) return;
     var len = selectedCircle.owner.r * 1.3;
-    var index = currentCircle.children.indexOf(selectedCircle);
-    var nextAngle = (index + 1 >= currentCircle.children.length ?
-        PI / 2 : //it's a last circle, so let's make sure it looks like the last one
-        currentCircle.children[index + 1].a),
-    previousAngle = (index - 1 < 0 ?
-        PI / 2 :    //it's first circle, so let's make sure it looks like the first one
-        currentCircle.children[index - 1].a);
+    var [nextAngle, previousAngle] = getCircleAngleLimits(selectedCircle);
     ctx.strokeStyle = "red";
     drawLine(currentCircle.x, currentCircle.y,
              currentCircle.x + Math.cos(nextAngle) * (len), currentCircle.y + Math.sin(nextAngle) * (len));
