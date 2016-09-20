@@ -26,7 +26,7 @@ var addLineMode     = false;
 
 Array.prototype.contains = function(k) {
     return (this.indexOf(k) != -1);
-}
+};
 
 Array.prototype.remove = function(index) {
     this.splice(index, 1);
@@ -43,8 +43,8 @@ Number.prototype.clamp = function(min, max) {
 };
 
 //math
-function dist(a, b) { return Math.sqrt(Math.pow((a.x - b.x), 2) + Math.pow((a.y - b.y), 2)) }
-function normalizeAngle(angle) { while (angle > PI) angle -= 2 * PI; while (angle < -PI) angle += 2 * PI; return angle }    //caps to (-PI, PI)
+function dist(a, b) { return Math.sqrt(Math.pow((a.x - b.x), 2) + Math.pow((a.y - b.y), 2)); }
+function normalizeAngle(angle) { while (angle > PI) angle -= 2 * PI; while (angle < -PI) angle += 2 * PI; return angle; }    //caps to (-PI, PI)
 
 function angleBetweenCircles(circle, second) {
     var d = dist(circle, second);
@@ -63,7 +63,7 @@ function drawRedDot(x, y) { ctx.fillStyle = "red"; drawDot(x, y, 3 + lineWidth /
 function drawBigRedDot(x, y) { ctx.fillStyle = "red"; drawDot(x, y, 3 + lineWidth); ctx.fillStyle = "black"; }
 
 $(document).ready(function() {
-    $('input').val(localStorage.getItem("input"));
+    $("input").val(localStorage.getItem("input"));
 
     prepareCanvas();
 
@@ -78,8 +78,8 @@ function updateText() {
 
     wordCircles = []; allCircles = []; lines = []; currentCircle = null; selectedCircle = null; selectedLine = null;
 
-    var text = $('input').val().trim().toLowerCase().split(" ");
-    localStorage.setItem("input", $('input').val());
+    var text = $("input").val().trim().toLowerCase().split(" ");
+    localStorage.setItem("input", $("input").val());
     var words = [];
     for (var toParse of text) {
         var word = [];
@@ -131,7 +131,7 @@ function deleteLine(line) {
 function Line(circle1, a1, circle2, a2) {
     this.draw = function() {
         ctx.strokeStyle = (selectedLine === this) ? "grey" : "black";
-        drawLine(this.points[0].x, this.points[0].y, this.points[1].x, this.points[1].y)
+        drawLine(this.points[0].x, this.points[0].y, this.points[1].x, this.points[1].y);
         if (dirtyRender && this.selectable) {
             if (deleteLineMode || (addLineMode && selectedLine === this)) {
                 drawBigRedDot(this.points[0].x, this.points[0].y);
@@ -141,20 +141,20 @@ function Line(circle1, a1, circle2, a2) {
                 drawRedDot(this.points[1].x, this.points[1].y);
             }
         }
-    }
+    };
     this.update = function() {
         for (var point of this.points) {
             point.x = point.circle.x + point.circle.r * Math.cos(point.a);
             point.y = point.circle.y + point.circle.r * Math.sin(point.a);
         }
-    }
+    };
     this.updatePoint = function(end, circle, a) {
         var point = this.points[end];
         point.circle.lines.removeItem(this);
         point.circle = circle; circle.lines.push(this);
         point.a = a;
         this.update();
-    }
+    };
     this.points = [{ circle: circle1, a: a1 },
                  { circle: circle2, a: a2 }];
     this.selectable = true;
@@ -202,7 +202,7 @@ function Circle(owner, type, subtype, d, r, a) {
         }
         if (dirtyRender && this.selectable)
             drawRedDot(this.x, this.y);
-    }
+    };
 
     this.update = function(d, a) {      //recalculates the position, forces other circles/lines connected to it to update too
         var oldA = this.a;
@@ -217,7 +217,7 @@ function Circle(owner, type, subtype, d, r, a) {
         }
         for (var line of this.lines)
             line.update();
-    }
+    };
     this.owner = owner;
     this.children = [];
     this.type = type; this.subtype = subtype;
@@ -280,50 +280,50 @@ function doClick(e) {
     }
     if (addLineMode)
         addLineMode = false;	//don't move both ends anymore; now it's a normal selectedLine with one attached end
-};
+}
 
 //makes sure that the correct distance from the base circle is kept according to language rules
 function correctCircleLocation(selected, d, a) {
     if (!snapMode) { selected.update(d, a); return; }
     switch (selected.type) {
-        case 1:     //B-row
-            d = d.clamp(selected.owner.r - selected.r + 1, selected.owner.r - selected.r * 0.5);
+    case 1:     //B-row
+        d = d.clamp(selected.owner.r - selected.r + 1, selected.owner.r - selected.r * 0.5);
+        break;
+    case 2:     //J-row
+        d = d.clamp(0, selected.owner.r - selected.r - 5);
+        break;
+    case 3:     //T-row
+        d = d.clamp(selected.owner.r, selected.owner.r + selected.r * 0.8);
+        break;
+    case 4:     //TH-row
+        d = selected.owner.r;
+        break;
+    case 5:     //vowels, laying on a wordCircle
+        switch (selected.subtype) {
+        case 1: d = d.clamp(selected.owner.r + selected.r, Infinity); break;
+        case 2:
+        case 3:
+        case 5:
+            d = selected.owner.r; break;
+        case 4: d = d.clamp(0, selected.owner.r - selected.r); break;
+        } break;
+    case 6:     //vowels, connected to consonants
+        switch (selected.subtype) {
+        case 1:
+            if (selected.owner.type === 1) { d = d.clamp(selected.r * 2, Infinity); a = selected.owner.a; }
+            if (selected.owner.type === 2) { d = d.clamp(selected.owner.r + selected.r, Infinity); a = selected.owner.a; }
+            if (selected.owner.type === 3) { d = d.clamp(selected.owner.r / 2, Infinity); a = selected.owner.a; }
+            if (selected.owner.type === 4) { d = d.clamp(selected.r, selected.owner.r - selected.r); a = selected.owner.a; }
             break;
-        case 2:     //J-row
-            d = d.clamp(0, selected.owner.r - selected.r - 5);
+        case 2:
+        case 3:
+        case 5:
+            if (selected.owner.type === 3) { d = selected.owner.d - selected.owner.owner.r; a = selected.owner.a + PI; }//locked
+            else d = 0;
             break;
-        case 3:     //T-row
-            d = d.clamp(selected.owner.r, selected.owner.r + selected.r * 0.8);
-            break;
-        case 4:     //TH-row
-            d = selected.owner.r;
-            break;
-        case 5:     //vowels, laying on a wordCircle
-            switch (selected.subtype) {
-                case 1: d = d.clamp(selected.owner.r + selected.r, Infinity); break;
-                case 2:
-                case 3:
-                case 5:
-                    d = selected.owner.r; break;
-                case 4: d = d.clamp(0, selected.owner.r - selected.r); break;
-            } break;
-        case 6:     //vowels, connected to consonants
-            switch (selected.subtype) {
-                case 1:
-                    if (selected.owner.type === 1) { d = d.clamp(selected.r * 2, Infinity); a = selected.owner.a; }
-                    if (selected.owner.type === 2) { d = d.clamp(selected.owner.r + selected.r, Infinity); a = selected.owner.a; }
-                    if (selected.owner.type === 3) { d = d.clamp(selected.owner.r / 2, Infinity); a = selected.owner.a; }
-                    if (selected.owner.type === 4) { d = d.clamp(selected.r, selected.owner.r - selected.r); a = selected.owner.a; }
-                    break;
-                case 2:
-                case 3:
-                case 5:
-                    if (selected.owner.type === 3) { d = selected.owner.d - selected.owner.owner.r; a = selected.owner.a + PI; }//locked
-                    else d = 0;
-                    break;
-                case 4:
-                    d = selected.owner.r; break;
-            } break;
+        case 4:
+            d = selected.owner.r; break;
+        } break;
     }
     selected.update(d, a);
     for (var child of selected.children)
@@ -344,7 +344,7 @@ function getCircleAngleLimits(circle) {
 }
 
 //manages the movement of circles and lines. In case of circles, correctCircleLocation() is called to enforce language rules
-$('canvas').mousemove(function(e) {
+$("canvas").mousemove(function(e) {
     var mouse = getMouse(e);
     if (selectedCircle != null) {
         var selected = selectedCircle;
@@ -380,7 +380,7 @@ $('canvas').mousemove(function(e) {
 });
 
 //changes the circle's radius
-$('canvas').mousewheel(function(event, delta, deltaX, deltaY) {
+$("canvas").mousewheel(function(event, delta, deltaX, deltaY) {
     if (selectedCircle != null) {
 
         var selected = selectedCircle;
@@ -431,7 +431,7 @@ function generateWords(words) {
             if (j > 0 && word[j].match("^(a|e|i|o|u)$") && !(word[j - 1].match("^(a|e|i|o|u)$"))) continue;
             wordL++;
         }
-        generateWord(word, wordL, r, d, angle)
+        generateWord(word, wordL, r, d, angle);
 
         angle -= delta; angle = normalizeAngle(angle);
     }
