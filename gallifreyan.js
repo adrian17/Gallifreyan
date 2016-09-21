@@ -7,7 +7,6 @@ var lineWidth   = 3.0 * canvasScale;
 var PI = Math.PI;
 
 var allCircles      = [],
-    wordCircles     = [],
     currentCircle   = null, //points to a wordCircle which contains selectedCircle
     selectedCircle  = null, //points to selected circle
     snapMode        = true; //disabling this disables some rule checking; can't be toggled for now
@@ -76,7 +75,7 @@ $(document).ready(function() {
 function updateText() {
     resetZoom();
 
-    wordCircles = []; allCircles = []; lines = []; currentCircle = null; selectedCircle = null; selectedLine = null;
+    allCircles = []; lines = []; currentCircle = null; selectedCircle = null; selectedLine = null;
 
     var text = $("input").val().trim().toLowerCase().split(" ");
     localStorage.setItem("input", $("input").val());
@@ -174,7 +173,7 @@ function Circle(owner, type, subtype, d, r, a) {
     this.draw = function() {
         ctx.strokeStyle = (selectedCircle === this) ? "grey" : "black";
 
-        if (wordCircles.contains(this)) {           //it's a wordCircle so we need to make a gap for B- and T- row letters
+        if (this.isWordCircle) {           //it's a wordCircle so we need to make a gap for B- and T- row letters
             var angles = [];                        //a list of intersections with these letters
             for (var child of this.children) {
                 if (child.hasGaps) {
@@ -210,10 +209,10 @@ function Circle(owner, type, subtype, d, r, a) {
         this.x = this.owner.x + dx; this.y = this.owner.y + dy; this.d = d;
         this.a = normalizeAngle(a);
         for (var child of this.children) {
-            if (wordCircles.contains(this))
-                child.update(child.d, child.a);
+            if (this.isWordCircle)
+                child.update(child.d, child.a); // don't change word orientation
             else
-                child.update(child.d, child.a - oldA + this.a);
+                child.update(child.d, child.a - oldA + this.a); // adjust vowel's orienatation
         }
         for (var line of this.lines)
             line.update();
@@ -222,6 +221,8 @@ function Circle(owner, type, subtype, d, r, a) {
     this.children = [];
     this.type = type; this.subtype = subtype;
 
+    // currently only word circles lay on main circle; this may change in the future
+    this.isWordCircle = owner == allCircles[0];
     this.isVowel = this.type === 5 || this.type === 6;
     this.isConsonant = ! this.isVowel;
     this.hasGaps = this.type === 1 || this.type === 3;
@@ -462,7 +463,6 @@ function generateWord(word, wordL, mcR, dist, mainAngle) {
 
     var newMainCircle = new Circle(allCircles[0], 2, 0, dist, mcR, mainAngle);
 
-    wordCircles.push(newMainCircle);
     allCircles.push(newMainCircle);
     allCircles[0].children.push(newMainCircle);
 
@@ -635,7 +635,7 @@ function createLines() {
 //checks whether all the circles have a correct amount of lines connected
 function checkLines() {
     for (var i = 1; i < allCircles.length; ++i) {   //we don't check the first circle
-        if (wordCircles.indexOf(allCircles[i]) != -1) continue; //also skip wordCircles
+        if (allCircles[i].isWordCircle) continue; //also skip wordCircles
         if (allCircles[i].nLines != allCircles[i].lines.length) return 0;
     }
     return 1;
