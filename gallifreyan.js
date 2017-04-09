@@ -372,8 +372,12 @@ $("canvas").mousemove(function(e) {
         for (var circle of allCircles) {
             var d = Math.abs(dist(mouse, circle) - circle.r);
             if (d < minD) {
-                minD = d;
                 var a = Math.atan2(mouse.y - circle.y, mouse.x - circle.x);
+                // this tries to prevent you from moving the line to a gap part of the circle.
+                // it's not perfect though, since you can still get there if that pixel happens to be black for some other reason
+                if (isPixelWhite(...pointFromAngle(circle, circle.r, a)))
+                    return;
+                minD = d;
                 selected.updatePoint(lineEnd, circle, a);
                 if (addLineMode)
                     selected.updatePoint((lineEnd+1) % 2, circle, a);	//moving both ends at once looks like a single red dot
