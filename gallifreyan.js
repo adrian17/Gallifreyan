@@ -41,6 +41,10 @@ Number.prototype.clamp = function(min, max) {
     return Math.min(Math.max(this, min), max);
 };
 
+function pointFromAngle(obj, r, angle) {
+    return [obj.x + Math.cos(angle) * r, obj.y + Math.sin(angle) * r]
+}
+
 //math
 function dist(a, b) { return Math.sqrt(Math.pow((a.x - b.x), 2) + Math.pow((a.y - b.y), 2)); }
 function normalizeAngle(angle) { while (angle > PI) angle -= 2 * PI; while (angle < -PI) angle += 2 * PI; return angle; }    //caps to (-PI, PI)
@@ -142,10 +146,8 @@ function Line(circle1, a1, circle2, a2) {
         }
     };
     this.update = function() {
-        for (var point of this.points) {
-            point.x = point.circle.x + point.circle.r * Math.cos(point.a);
-            point.y = point.circle.y + point.circle.r * Math.sin(point.a);
-        }
+        for (var point of this.points)
+            [point.x, point.y] = pointFromAngle(point.circle, point.circle.r, point.a);
     };
     this.updatePoint = function(end, circle, a) {
         var point = this.points[end];
@@ -195,9 +197,11 @@ function Circle(owner, type, subtype, d, r, a) {
         }
 
         if (this.dots) {  //drawing the dots
-            var dotR = 3 + lineWidth / 2, r = this.r - 1 - 3 * dotR, delta = (0.2 * this.owner.r / this.r);
+            var dotR = 3 + lineWidth / 2;
+            var r = this.r - 1 - 3 * dotR
+            var delta = (0.2 * this.owner.r / this.r);
             for (var i = -1; i < this.dots - 1; i++)
-                drawDot(this.x - Math.cos(this.a + delta * i) * r, this.y - Math.sin(this.a + delta * i) * r, dotR);
+                drawDot(...pointFromAngle(this, r, this.a + delta * i + PI), dotR);
         }
         if (dirtyRender && this.selectable)
             drawRedDot(this.x, this.y);
@@ -205,8 +209,8 @@ function Circle(owner, type, subtype, d, r, a) {
 
     this.update = function(d, a) {      //recalculates the position, forces other circles/lines connected to it to update too
         var oldA = this.a;
-        var dx = Math.cos(a) * (d), dy = Math.sin(a) * (d);
-        this.x = this.owner.x + dx; this.y = this.owner.y + dy; this.d = d;
+        [this.x, this.y] = pointFromAngle(this.owner, d, a);
+        this.d = d;
         this.a = normalizeAngle(a);
         for (var child of this.children) {
             if (this.isWordCircle)
@@ -409,10 +413,8 @@ function drawAngles() {
     var len = selectedCircle.owner.r * 1.3;
     var [nextAngle, previousAngle] = getCircleAngleLimits(selectedCircle);
     ctx.strokeStyle = "red";
-    drawLine(currentCircle.x, currentCircle.y,
-             currentCircle.x + Math.cos(nextAngle) * (len), currentCircle.y + Math.sin(nextAngle) * (len));
-    drawLine(currentCircle.x, currentCircle.y,
-             currentCircle.x + Math.cos(previousAngle) * (len), currentCircle.y + Math.sin(previousAngle) * (len));
+    drawLine(currentCircle.x, currentCircle.y, ...pointFromAngle(currentCircle, len, nextAngle));
+    drawLine(currentCircle.x, currentCircle.y, ...pointFromAngle(currentCircle, len, previousAngle));
     ctx.strokeStyle = "black";
 }
 
@@ -576,7 +578,7 @@ function createLines() {
                 for (var n = 0; n < 100; ++n) {
                     var inter = 0;
                     var randAngle = baseLineAngle(circle) + (Math.random() - 0.5) * allowedOffset(circle);
-                    var x = circle.x + circle.r * Math.cos(randAngle), y = circle.y + circle.r * Math.sin(randAngle);
+                    var [x, y] = pointFromAngle(circle, circle.r, randAngle);
                     intersection = findIntersection(circle2.x, circle2.y, circle2.r, x, y, randAngle);
                     var maxT = intersection.t;
 
@@ -592,7 +594,7 @@ function createLines() {
                     }
                     if (inter < minInter) { minInter = inter; bestAngle = randAngle; }
                 }
-                var x = circle.x + circle.r * Math.cos(bestAngle), y = circle.y + circle.r * Math.sin(bestAngle);
+                var [x, y] = pointFromAngle(circle, circle.r, bestAngle);
                 intersection = findIntersection(circle2.x, circle2.y, circle2.r, x, y, bestAngle);
                 lines.push(new Line(circle, bestAngle, circle2, intersection.a));
                 if (circle.isVowel) break;
@@ -605,7 +607,7 @@ function createLines() {
                 if (circle2.lines.length >= circle2.nLines) continue;
                 if (circle2.isVowel && circle2.subtype === 5) continue;
                 var angle = Math.atan2(circle2.y - circle.y, circle2.x - circle.x);
-                var x = circle.x + circle.r * Math.cos(angle), y = circle.y + circle.r * Math.sin(angle);
+                var [x, y] = pointFromAngle(circle, circle.r, angle);
 
                 intersection = findIntersection(circle2.x, circle2.y, circle2.r, x, y, angle);
                 if (intersection === 0) continue;
@@ -624,18 +626,12 @@ function createLines() {
                 if (isLineTooClose(circle2, angle2)) continue;
 
                 //let's just check if we don't run into a white section of a circle
-                if (circle.hasGaps) {
-                    var x = circle.x + circle.r * Math.cos(angle);
-                    var y = circle.y + circle.r * Math.sin(angle);
-                    if (isPixelWhite(x, y))
+                if (circle.hasGaps)
+                    if (isPixelWhite(...pointFromAngle(circle, circle.r, angle)))
                         continue;
-                }
-                if (circle2.hasGaps) {
-                    var x = circle2.x + circle2.r * Math.cos(angle2);
-                    var y = circle2.y + circle2.r * Math.sin(angle2);
-                    if (isPixelWhite(x, y))
+                if (circle2.hasGaps)
+                    if (isPixelWhite(...pointFromAngle(circle2, circle2.r, angle2)))
                         continue;
-                }
                 //nothing more to check, let's make a line there
                 lines.push(new Line(circle, angle, circle2, angle2));
 
