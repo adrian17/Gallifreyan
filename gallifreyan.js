@@ -301,12 +301,12 @@ function correctCircleLocation(selected, d, a) {
         break;
     case 5:     //vowels, laying on a wordCircle
         switch (selected.subtype) {
-        case 1: d = d.clamp(selected.owner.r + selected.r, Infinity); break;
+        case 1: d = d.clamp(selected.owner.r + selected.r + 5, Infinity); break;
         case 2:
         case 3:
         case 5:
             d = selected.owner.r; break;
-        case 4: d = d.clamp(0, selected.owner.r - selected.r); break;
+        case 4: d = d.clamp(0, selected.owner.r - selected.r - 5); break;
         } break;
     case 6:     //vowels, connected to consonants
         switch (selected.subtype) {
