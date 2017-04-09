@@ -547,27 +547,35 @@ function isPixelWhite(x, y) {
 
 //generates the lines after all the circles are created
 function createLines() {
-    var i, j, k, circle, circle2, intersection, angle;
+    var baseLineAngle = circle => {
+        if (circle.type === 6)
+            return circle.subtype === 3 ? circle.owner.a + PI : circle.owner.a;
+        else if (circle.type === 5)
+            return circle.subtype === 3 ? circle.a + PI : circle.a;
+        else
+            return circle.a + PI;
+    }
+    var allowedOffset = circle => circle.type === 6 ? PI / 6 : PI / 2;
+
+    var i, j, k, circle, circle2, intersection;
     // note: currently bestAngle is not reset. That means a new line may happen to have the same angle as a previous one
-    var bestAngle = 0, inter, minInter;
+    var bestAngle = 0;
     for (i = 1; i < allCircles.length; ++i) {
         circle = allCircles[i];
         if (circle.nLines === 0) continue;
         var passes = 0;
         while (circle.lines.length < circle.nLines) {
+
             //looks for the best path to the base circle if there are no other options left
             if (passes > 100 || (circle.isVowel && circle.subtype === 5)) {
-                if (circle.type === 6) { if (circle.subtype === 3) var angle = circle.owner.a + PI; else angle = circle.owner.a; }
-                else if (circle.type === 5 && circle.subtype === 5) angle = circle.a;
-                else angle = circle.a + PI;
 
                 circle2 = allCircles[0];    //the only one left
 
                 //let's look for the path with the least intersections
-                minInter = 1000;
+                var minInter = 1000;
                 for (var n = 0; n < 100; ++n) {
-                    inter = 0;
-                    var randAngle = angle + (Math.random() - 0.5) * (circle.type === 6 ? PI / 6 : PI / 2);
+                    var inter = 0;
+                    var randAngle = baseLineAngle(circle) + (Math.random() - 0.5) * allowedOffset(circle);
                     var x = circle.x + circle.r * Math.cos(randAngle), y = circle.y + circle.r * Math.sin(randAngle);
                     intersection = findIntersection(circle2.x, circle2.y, circle2.r, x, y, randAngle);
                     var maxT = intersection.t;
@@ -596,33 +604,40 @@ function createLines() {
                 circle2 = allCircles[j];
                 if (circle2.lines.length >= circle2.nLines) continue;
                 if (circle2.isVowel && circle2.subtype === 5) continue;
-                angle = Math.atan2(circle2.y - circle.y, circle2.x - circle.x);
+                var angle = Math.atan2(circle2.y - circle.y, circle2.x - circle.x);
                 var x = circle.x + circle.r * Math.cos(angle), y = circle.y + circle.r * Math.sin(angle);
 
                 intersection = findIntersection(circle2.x, circle2.y, circle2.r, x, y, angle);
                 if (intersection === 0) continue;
+                var angle2 = intersection.a;
+
                 if (Math.floor(Math.random() + 0.6)) continue;  //some extra randomness
 
                 var rand = (Math.random() - 0.5) * PI / 4;
+                angle += rand;
+                angle2 -= rand;
 
-                if (isLineTooClose(circle, angle + rand)) continue;
-                if (isLineTooClose(circle2, intersection.a - rand)) continue;
+                if (Math.abs(angle - baseLineAngle(circle)) > allowedOffset(circle)) continue;
+                if (Math.abs(angle2 - baseLineAngle(circle2)) > allowedOffset(circle2)) continue;
+
+                if (isLineTooClose(circle, angle)) continue;
+                if (isLineTooClose(circle2, angle2)) continue;
 
                 //let's just check if we don't run into a white section of a circle
                 if (circle.hasGaps) {
-                    var x = circle.x + circle.r * Math.cos(angle + rand);
-                    var y = circle.y + circle.r * Math.sin(angle + rand);
+                    var x = circle.x + circle.r * Math.cos(angle);
+                    var y = circle.y + circle.r * Math.sin(angle);
                     if (isPixelWhite(x, y))
                         continue;
                 }
                 if (circle2.hasGaps) {
-                    var x = circle2.x + circle2.r * Math.cos(intersection.a - rand);
-                    var y = circle2.y + circle2.r * Math.sin(intersection.a - rand);
+                    var x = circle2.x + circle2.r * Math.cos(angle2);
+                    var y = circle2.y + circle2.r * Math.sin(angle2);
                     if (isPixelWhite(x, y))
                         continue;
                 }
                 //nothing more to check, let's make a line there
-                lines.push(new Line(circle, angle + rand, circle2, intersection.a - rand));
+                lines.push(new Line(circle, angle, circle2, angle2));
 
                 if (circle.lines.length >= circle.nLines) break;
             }
