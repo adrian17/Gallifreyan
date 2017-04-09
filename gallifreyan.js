@@ -460,18 +460,14 @@ function generateWord(word, wordL, mcR, dist, mainAngle) {
     var angle = PI / 2;
     var globalR = 1.8 * mcR / (wordL + 2);
 
-    var i;
-    var owner, newCircle = 0;
-
     var newMainCircle = new Circle(allCircles[0], 2, 0, dist, mcR, mainAngle);
 
     allCircles.push(newMainCircle);
     allCircles[0].children.push(newMainCircle);
 
-    for (var i = 0; i < word.length; i++) {
-        var letter = word[i];
-        newCircle = 0;
-        owner = newMainCircle;
+    for (var letter of word) {
+        var newCircle = null;
+        var owner = newMainCircle;
 
         var type = 0, r = 0, d = 0;
         var subtype = map[letter];
@@ -503,7 +499,7 @@ function generateWord(word, wordL, mcR, dist, mainAngle) {
                 newCircle = new Circle(owner, type, subtype, owner.r, r, angle);
                 angle += delta / 2;
             }
-            else if (previous && i != 0 && previous.isConsonant && previous.children.length === 0) {   //are we free to attach?
+            else if (previous && previous.isConsonant && previous.children.length === 0) {   //are we free to attach?
                 type = 6;
                 owner = previous;
                 angle += delta;
@@ -515,7 +511,7 @@ function generateWord(word, wordL, mcR, dist, mainAngle) {
                 newCircle = new Circle(owner, type, subtype, owner.r, r, angle);
             }
         }
-        if (newCircle === 0) continue;  //skip, if the letter wasn't found
+        if (newCircle === null) continue;  //skip, if the letter wasn't found
 
         newCircle.nLines = nLines;
         correctCircleLocation(newCircle, newCircle.d, newCircle.a);
@@ -533,11 +529,11 @@ function isLineTooClose(circle, angle) {
     for (var line of circle.lines) {
         var diff;
         diff = normalizeAngle(line.points[0].a - angle); diff = Math.abs(diff);
-        if (line.points[0].circle === circle && diff < 0.1) return 1;
+        if (line.points[0].circle === circle && diff < 0.1) return true;
         diff = normalizeAngle(line.points[1].a - angle); diff = Math.abs(diff);
-        if (line.points[1].circle === circle && diff < 0.1) return 1;
+        if (line.points[1].circle === circle && diff < 0.1) return true;
     }
-    return 0;
+    return false;
 }
 
 function isPixelWhite(x, y) {
@@ -559,11 +555,10 @@ function createLines() {
     }
     var allowedOffset = circle => circle.type === 6 ? PI / 6 : PI / 2;
 
-    var i, j, k, circle, circle2, intersection;
+    var checkedCircles = allCircles.slice(1); // without main circle
     // note: currently bestAngle is not reset. That means a new line may happen to have the same angle as a previous one
     var bestAngle = 0;
-    for (i = 1; i < allCircles.length; ++i) {
-        circle = allCircles[i];
+    for (var circle of checkedCircles) {
         if (circle.nLines === 0) continue;
         var passes = 0;
         while (circle.lines.length < circle.nLines) {
@@ -579,15 +574,14 @@ function createLines() {
                     var inter = 0;
                     var randAngle = baseLineAngle(circle) + (Math.random() - 0.5) * allowedOffset(circle);
                     var [x, y] = pointFromAngle(circle, circle.r, randAngle);
-                    intersection = findIntersection(circle2.x, circle2.y, circle2.r, x, y, randAngle);
+                    var intersection = findIntersection(circle2.x, circle2.y, circle2.r, x, y, randAngle);
                     var maxT = intersection.t;
 
                     if (isLineTooClose(circle, randAngle)) continue;
                     if (isLineTooClose(circle2, intersection.a)) continue;
 
-                    for (k = 1; k < allCircles.length; ++k) {
-                        if (k === i) continue;
-                        var circle3 = allCircles[k];
+                    for (var circle3 of checkedCircles) {
+                        if (circle3 === circle) continue;
                         intersection = findIntersection(circle3.x, circle3.y, circle3.r, x, y, randAngle);
                         if (intersection === 0) continue;
                         if (intersection.t < maxT) inter++;
@@ -595,21 +589,20 @@ function createLines() {
                     if (inter < minInter) { minInter = inter; bestAngle = randAngle; }
                 }
                 var [x, y] = pointFromAngle(circle, circle.r, bestAngle);
-                intersection = findIntersection(circle2.x, circle2.y, circle2.r, x, y, bestAngle);
+                var intersection = findIntersection(circle2.x, circle2.y, circle2.r, x, y, bestAngle);
                 lines.push(new Line(circle, bestAngle, circle2, intersection.a));
                 if (circle.isVowel) break;
                 else continue;
             }
             //normal routine, searches for pairs that still need circles
-            for (j = 1; j < allCircles.length; ++j) {
-                if (j === i) continue;
-                circle2 = allCircles[j];
+            for (var circle2 of checkedCircles) {
+                if (circle2 === circle) continue;
                 if (circle2.lines.length >= circle2.nLines) continue;
                 if (circle2.isVowel && circle2.subtype === 5) continue;
                 var angle = Math.atan2(circle2.y - circle.y, circle2.x - circle.x);
                 var [x, y] = pointFromAngle(circle, circle.r, angle);
 
-                intersection = findIntersection(circle2.x, circle2.y, circle2.r, x, y, angle);
+                var intersection = findIntersection(circle2.x, circle2.y, circle2.r, x, y, angle);
                 if (intersection === 0) continue;
                 var angle2 = intersection.a;
 
@@ -645,9 +638,9 @@ function createLines() {
 
 //checks whether all the circles have a correct amount of lines connected
 function checkLines() {
-    for (var i = 1; i < allCircles.length; ++i) {   //we don't check the first circle
-        if (allCircles[i].isWordCircle) continue; //also skip wordCircles
-        if (allCircles[i].nLines != allCircles[i].lines.length) return 0;
+    for (var circle of allCircles.slice(1)) {   //we don't check the first circle
+        if (circle.isWordCircle) continue; //also skip wordCircles
+        if (circle.nLines != circle.lines.length) return 0;
     }
     return 1;
 }
