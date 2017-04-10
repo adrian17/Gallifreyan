@@ -48,6 +48,7 @@ function pointFromAngle(obj, r, angle) {
 //math
 function dist(a, b) { return Math.sqrt(Math.pow((a.x - b.x), 2) + Math.pow((a.y - b.y), 2)); }
 function normalizeAngle(angle) { while (angle > PI) angle -= 2 * PI; while (angle < -PI) angle += 2 * PI; return angle; }    //caps to (-PI, PI)
+function angleDifference(a, b) { return normalizeAngle(a-b); } // capped to (-PI, PI);
 
 function angleBetweenCircles(circle, second) {
     var d = dist(circle, second);
@@ -532,9 +533,9 @@ function generateWord(word, wordL, mcR, dist, mainAngle) {
 function isLineTooClose(circle, angle) {
     for (var line of circle.lines) {
         var diff;
-        diff = normalizeAngle(line.points[0].a - angle); diff = Math.abs(diff);
+        diff = Math.abs(angleDifference(line.points[0].a, angle));
         if (line.points[0].circle === circle && diff < 0.1) return true;
-        diff = normalizeAngle(line.points[1].a - angle); diff = Math.abs(diff);
+        diff = Math.abs(angleDifference(line.points[1].a, angle));
         if (line.points[1].circle === circle && diff < 0.1) return true;
     }
     return false;
@@ -616,8 +617,10 @@ function createLines() {
                 angle += rand;
                 angle2 -= rand;
 
-                if (Math.abs(angle - baseLineAngle(circle)) > allowedOffset(circle)) continue;
-                if (Math.abs(angle2 - baseLineAngle(circle2)) > allowedOffset(circle2)) continue;
+                if (Math.abs(angleDifference(angle, baseLineAngle(circle))) > allowedOffset(circle))
+                    continue;
+                if (Math.abs(angleDifference(angle2, baseLineAngle(circle2))) > allowedOffset(circle2))
+                    continue;
 
                 if (isLineTooClose(circle, angle)) continue;
                 if (isLineTooClose(circle2, angle2)) continue;
