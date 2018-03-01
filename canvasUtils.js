@@ -77,8 +77,14 @@ $(document).on("contextmenu", "canvas", function(e) {
 function createFinalImage() {
     dirtyRender = 0;
     redraw();
-    var dataURL = canvas.toDataURL();
-    window.open(dataURL);
+
+    var e = document.createElement('a');
+    e.href = canvas.toDataURL();
+    e.download = 'gallifreyan.png';
+    document.body.appendChild(e);
+    e.click();
+    document.body.removeChild(e);
+
     dirtyRender = 1;
     redraw();
     return;
