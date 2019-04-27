@@ -1,10 +1,10 @@
 "use strict";
-var canvasSize  = 1000.0;               //the image resolution in pixels
-var canvasScale = canvasSize / 800.0;   //800=the canvas size on the screen
-var midPoint    = canvasSize / 2.0;     //the (x, y) of the centerpoint
-var outerR      = midPoint * 0.9;       //radius of the outermost circle
+const canvasSize  = 1000.0;               //the image resolution in pixels
+const canvasScale = canvasSize / 800.0;   //800=the canvas size on the screen
+const midPoint    = canvasSize / 2.0;     //the (x, y) of the centerpoint
+const outerR      = midPoint * 0.9;       //radius of the outermost circle
+const PI = Math.PI;
 var lineWidth   = 3.0 * canvasScale;
-var PI = Math.PI;
 
 var allCircles      = [],
     currentCircle   = null, //points to a wordCircle which contains selectedCircle

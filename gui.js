@@ -1,5 +1,5 @@
 "use strict";
-var buttons = [];
+const buttons = [];
 
 function Button(x, y, width, text, f) {
     this.draw = function() {
@@ -44,8 +44,8 @@ function createGUI() {
 }
 
 function drawGUI() {
-    for (var i = 0; i < buttons.length; ++i) {
-        buttons[i].draw();
+    for (let button of buttons) {
+        button.draw();
     }
     ctx.fillText("are lines correct?: " + (checkLines() ? "yes" : "no"), 10, canvasSize - 10 * canvasScale);
 }

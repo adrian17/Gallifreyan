@@ -1,5 +1,5 @@
 "use strict";
-var scrollerObj = new Scroller(function(left, top, zoom) {
+const scrollerObj = new Scroller(function(left, top, zoom) {
     // apply coordinates/zooming
 }, {
     zooming: true,
