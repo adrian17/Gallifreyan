@@ -84,7 +84,7 @@ function download(extension, href) {
 }
 
 function createFinalSVG() {
-    dirtyRender = 0;
+    dirtyRender = false;
 
     let oldctx = ctx;
     ctx = new C2S(canvasSize, canvasSize);
@@ -94,16 +94,16 @@ function createFinalSVG() {
 
     download('svg', 'data:image/svg+xml; charset=utf8, ' + encodeURIComponent(svg));
 
-    dirtyRender = 1;
+    dirtyRender = true;
     redraw();
 }
 
 function createFinalImage() {
-    dirtyRender = 0;
+    dirtyRender = false;
     redraw();
 
     download('png', canvas.toDataURL());
 
-    dirtyRender = 1;
+    dirtyRender = true;
     redraw();
 }
