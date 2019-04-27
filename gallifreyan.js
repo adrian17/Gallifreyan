@@ -373,7 +373,7 @@ $("canvas").mousemove(function(e) {
                 // this tries to prevent you from moving the line to a gap part of the circle.
                 // it's not perfect though, since you can still get there if that pixel happens to be black for some other reason
                 if (isPixelWhite(...pointFromAngle(circle, circle.r, a)))
-                    return;
+                    continue;
                 minD = d;
                 selected.updatePoint(lineEnd, circle, a);
                 if (addLineMode)
