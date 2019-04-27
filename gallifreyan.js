@@ -46,6 +46,15 @@ function dist(a, b) { return Math.sqrt(Math.pow((a.x - b.x), 2) + Math.pow((a.y 
 function normalizeAngle(angle) { while (angle > PI) angle -= 2 * PI; while (angle < -PI) angle += 2 * PI; return angle; }    //caps to (-PI, PI)
 function angleDifference(a, b) { return normalizeAngle(a-b); } // capped to (-PI, PI);
 
+function isBetween(a1, a2, a) {
+    a1 = normalizeAngle(a1);
+    a2 = normalizeAngle(a2);
+    a = normalizeAngle(a);
+    if (a2 < a1) a2 += 2*PI;
+    if (a < a1) a += 2*PI;
+    return a < a2;
+}
+
 function angleBetweenCircles(circle, second) {
     var d = dist(circle, second);
     var angle = Math.acos((second.r*second.r - d*d - circle.r*circle.r) / (-2*d*circle.r));
@@ -218,6 +227,26 @@ function Circle(owner, type, subtype, d, r, a) {
         for (var line of this.lines)
             line.update();
     };
+
+    this.hasPoint = function(a) {
+        // check if point at this angle would be on a visible arc.
+        // same basic logic as in draw()
+        if (this.isWordCircle) {
+            for (var child of this.children) {
+                if (child.hasGaps) {
+                    var an = angleBetweenCircles(this, child);
+                    if (!isBetween(child.a + an, child.a - an, a))
+                        return false;
+                }
+            }
+            return true;
+        }
+        else if (this.hasGaps) {
+            var an = angleBetweenCircles(this, this.owner);
+            return isBetween(this.a + PI - an, this.a + PI + an, a);
+        } else return true;
+    }
+
     this.owner = owner;
     this.children = [];
     this.type = type; this.subtype = subtype;
@@ -370,9 +399,7 @@ $("canvas").mousemove(function(e) {
             var d = Math.abs(dist(mouse, circle) - circle.r);
             if (d < minD) {
                 var a = Math.atan2(mouse.y - circle.y, mouse.x - circle.x);
-                // this tries to prevent you from moving the line to a gap part of the circle.
-                // it's not perfect though, since you can still get there if that pixel happens to be black for some other reason
-                if (isPixelWhite(...pointFromAngle(circle, circle.r, a)))
+                if (!circle.hasPoint(a))
                     continue;
                 minD = d;
                 selected.updatePoint(lineEnd, circle, a);
@@ -537,13 +564,6 @@ function isLineTooClose(circle, angle) {
     return false;
 }
 
-function isPixelWhite(x, y) {
-    // note: x, y are window coords, not world coords (unless zoom==1)
-    var data = ctx.getImageData(Math.floor(x), Math.floor(y), 1, 1).data;
-    // actually, the default "white" on canvas is transparent black
-    return data[0] === 0 && data[1] === 0 && data[2] === 0 && data[3] === 0;
-}
-
 //generates the lines after all the circles are created
 function createLines() {
     var baseLineAngle = circle => {
@@ -622,12 +642,10 @@ function createLines() {
                 if (isLineTooClose(circle2, angle2)) continue;
 
                 //let's just check if we don't run into a white section of a circle
-                if (circle.hasGaps)
-                    if (isPixelWhite(...pointFromAngle(circle, circle.r, angle)))
-                        continue;
-                if (circle2.hasGaps)
-                    if (isPixelWhite(...pointFromAngle(circle2, circle2.r, angle2)))
-                        continue;
+                if (!circle.hasPoint(angle))
+                    continue;
+                if (!circle2.hasPoint(angle2))
+                    continue;
                 //nothing more to check, let's make a line there
                 lines.push(new Line(circle, angle, circle2, angle2));
 

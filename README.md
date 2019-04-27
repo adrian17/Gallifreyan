@@ -26,6 +26,5 @@ The project is based on Sherman's Circular Gallifreyan, for more information abo
 
 #### enhancements:
 - make line creation algorithm smarter
-- disallow placing lines on invisible sections of circles (use some proper logic instead of pixel-checking workaround in createLines() )
 - make arranging words prettier
 - overall tweaks for the generation code, especially sizes
