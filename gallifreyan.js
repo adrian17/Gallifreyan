@@ -23,10 +23,6 @@ var deleteLineMode  = false;//whether next selected line will be deleted
 // A click will disable this mode, and you'll normally control the other end of the line.
 var addLineMode     = false;
 
-Array.prototype.contains = function(k) {
-    return (this.indexOf(k) != -1);
-};
-
 Array.prototype.remove = function(index) {
     this.splice(index, 1);
     return this;
@@ -509,7 +505,7 @@ function generateWord(word, wordL, mcR, dist, mainAngle) {
                 owner = previous;
                 angle += delta;
                 newCircle = new Circle(owner, type, subtype, owner.r / 2, r, owner.a + PI + PI / 8);
-                if ([2, 3, 5].contains(subtype)) newCircle.selectable = false;
+                if ([2, 3, 5].includes(subtype)) newCircle.selectable = false;
             }
             else {  //let's just add this normally then.
                 type = 5, d = mcR;
