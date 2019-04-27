@@ -74,18 +74,36 @@ $(document).on("contextmenu", "canvas", function(e) {
     return false;
 });
 
+function download(extension, href) {
+    var e = document.createElement('a');
+    e.href = href;
+    e.download = 'gallifreyan.' + extension;
+    document.body.appendChild(e);
+    e.click();
+    document.body.removeChild(e);
+}
+
+function createFinalSVG() {
+    dirtyRender = 0;
+
+    let oldctx = ctx;
+    ctx = new C2S(canvasSize, canvasSize);
+    redraw();
+    let svg = ctx.getSerializedSvg();
+    ctx = oldctx;
+
+    download('svg', 'data:image/svg+xml; charset=utf8, ' + encodeURIComponent(svg));
+
+    dirtyRender = 1;
+    redraw();
+}
+
 function createFinalImage() {
     dirtyRender = 0;
     redraw();
 
-    var e = document.createElement('a');
-    e.href = canvas.toDataURL();
-    e.download = 'gallifreyan.png';
-    document.body.appendChild(e);
-    e.click();
-    document.body.removeChild(e);
+    download('png', canvas.toDataURL());
 
     dirtyRender = 1;
     redraw();
-    return;
 }

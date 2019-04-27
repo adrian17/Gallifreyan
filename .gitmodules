@@ -4,3 +4,6 @@
 [submodule "scroller"]
 	path = scroller
 	url = https://github.com/zynga/scroller.git
+[submodule "canvas2svg"]
+	path = canvas2svg
+	url = https://github.com/gliffy/canvas2svg.git
