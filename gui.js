@@ -35,8 +35,9 @@ function createGUI() {
     buttons.push(new Button(0, 0, 130, "save image", createFinalImage));
     buttons.push(new Button(0, 30, 110, "save SVG", createFinalSVG));
     buttons.push(new Button(800 - 170, 0, 110, "line width", function() { }));
-    buttons.push(new Button(800 - 170, 30, 170, "delete line", function() { deleteLineMode = true; redraw(); }));
-    buttons.push(new Button(800 - 170, 60, 170, "add line", function() { addNewLine(); redraw(); }));
+    buttons.push(new Button(800 - 140, 30, 140, "delete line", function() { deleteLineMode = true; redraw(); }));
+    buttons.push(new Button(800 - 140, 60, 140, "add line", function() { addNewLine(); redraw(); }));
+    buttons.push(new Button(800 - 140, 90, 140, "toggle curve", function() { convertLineMode = true; redraw(); }));
     buttons.push(new Button(800 - 60, 0, 30, "+",
         function() { lineWidth += 0.5; redraw(); }
     ));

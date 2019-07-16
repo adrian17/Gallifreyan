@@ -23,6 +23,9 @@ var deleteLineMode  = false;//whether next selected line will be deleted
 // A click will disable this mode, and you'll normally control the other end of the line.
 var addLineMode     = false;
 
+// next selected line will be toggled between straight and curved
+var convertLineMode = false;
+
 Array.prototype.remove = function(index) {
     this.splice(index, 1);
     return this;
@@ -172,7 +175,7 @@ class Line {
         }
 
         if (dirtyRender && this.selectable) {
-            if (deleteLineMode || (addLineMode && selectedLine === this)) {
+            if (deleteLineMode || convertLineMode || (addLineMode && selectedLine === this)) {
                 drawBigRedDot(points[0].x, points[0].y);
                 drawBigRedDot(points[1].x, points[1].y);
             } else {
@@ -188,6 +191,14 @@ class Line {
                 drawRedDot(points[0].x, points[0].y);
                 drawRedDot(points[1].x, points[1].y);
             }
+        }
+    }
+    toggleCurve() {
+        if (this.anchors) {
+            this.rel_anchors = null;
+        } else {
+            let vector = {x: this.points[0].x-this.points[1].x, y: this.points[0].y-this.points[1].y}
+            this.rel_anchors = [{x: vector.y/5, y: -vector.x/5}, {x: -vector.y/5, y: vector.x/5}];
         }
     }
     update() {
@@ -345,10 +356,14 @@ function doClick(e) {
         if (deleteLineMode) {
             deleteLine(selectedLine);
             selectedLine = null;
+        } else if (convertLineMode) {
+            selectedLine.toggleCurve();
+            selectedLine = null;
         }
     }
-    if (deleteLineMode) {
+    if (deleteLineMode || convertLineMode) {
         deleteLineMode = false;
+        convertLineMode = false;
         redraw();
     }
     if (addLineMode)
