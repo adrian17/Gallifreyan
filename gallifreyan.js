@@ -64,12 +64,14 @@ function angleBetweenCircles(circle, second) {
 //since we are drawing mostly circles, it's not like we need control over beginPath() and stroke() anyway
 function drawCircle(x, y, r) { ctx.beginPath(); ctx.arc(x, y, r, 0, PI * 2); ctx.stroke(); }
 function drawArc(x, y, r, a1, a2) { ctx.beginPath(); ctx.arc(x, y, r, a1, a2); ctx.stroke(); }
+function drawBezier(x1, y1, x2, y2, ax1, ay1, ax2, ay2) { ctx.beginPath(); ctx.moveTo(x1, y1); ctx.bezierCurveTo(ax1, ay1, ax2, ay2, x2, y2); ctx.stroke(); }
 function drawLine(x1, y1, x2, y2) { ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); }
 function drawDot(x, y, r) { ctx.beginPath(); ctx.arc(x, y, r, 0, PI * 2); ctx.fill(); }
 
 //draws a red dot in a given location, signifying a circle you can select
 function drawRedDot(x, y) { ctx.fillStyle = "red"; drawDot(x, y, 3 + lineWidth / 3); ctx.fillStyle = "black"; }
-function drawBigRedDot(x, y) { ctx.fillStyle = "red"; drawDot(x, y, 3 + lineWidth); ctx.fillStyle = "black"; }
+function drawSmallRedDot(x, y) { ctx.fillStyle = "red"; drawDot(x, y, 1 + lineWidth / 3); ctx.fillStyle = "black"; }
+function drawBigRedDot(x, y) { ctx.fillStyle = "red"; drawDot(x, y, 4 + lineWidth / 2); ctx.fillStyle = "black"; }
 
 $(document).ready(function() {
     $("input").val(localStorage.getItem("input"));
@@ -141,21 +143,50 @@ class Line {
     constructor(circle1, a1, circle2, a2) {
         this.points = [{ circle: circle1, a: a1 },
                      { circle: circle2, a: a2 }];
+
+        this.rel_anchors = null;
         this.selectable = true;
 
         circle1.lines.push(this); circle2.lines.push(this);
         this.update();
     }
+    get anchors() {
+        if (!this.rel_anchors)
+            return null;
+        return [
+            {x: this.points[0].x+this.rel_anchors[0].x, y: this.points[0].y+this.rel_anchors[0].y},
+            {x: this.points[1].x+this.rel_anchors[1].x, y: this.points[1].y+this.rel_anchors[1].y},
+        ]
+    }
     draw() {
         ctx.strokeStyle = (selectedLine === this) ? "grey" : "black";
-        drawLine(this.points[0].x, this.points[0].y, this.points[1].x, this.points[1].y);
+
+        let points = this.points, anchors = this.anchors;
+        if (anchors) {
+            drawBezier(
+                points[0].x, points[0].y, points[1].x, points[1].y,
+                anchors[0].x, anchors[0].y, anchors[1].x, anchors[1].y,
+            );
+        } else {
+            drawLine(points[0].x, points[0].y, points[1].x, points[1].y)
+        }
+
         if (dirtyRender && this.selectable) {
             if (deleteLineMode || (addLineMode && selectedLine === this)) {
-                drawBigRedDot(this.points[0].x, this.points[0].y);
-                drawBigRedDot(this.points[1].x, this.points[1].y);
+                drawBigRedDot(points[0].x, points[0].y);
+                drawBigRedDot(points[1].x, points[1].y);
             } else {
-                drawRedDot(this.points[0].x, this.points[0].y);
-                drawRedDot(this.points[1].x, this.points[1].y);
+                if (anchors) {
+                    ctx.strokeStyle = "gray"; ctx.lineWidth = 1;
+                    drawLine(points[0].x, points[0].y, anchors[0].x, anchors[0].y);
+                    drawLine(points[1].x, points[1].y, anchors[1].x, anchors[1].y)
+                    ctx.strokeStyle = "black"; ctx.lineWidth = lineWidth;
+                    drawSmallRedDot(anchors[0].x, anchors[0].y);
+                    drawSmallRedDot(anchors[1].x, anchors[1].y);
+                }
+
+                drawRedDot(points[0].x, points[0].y);
+                drawRedDot(points[1].x, points[1].y);
             }
         }
     }
@@ -271,7 +302,7 @@ class Circle {
 function doClick(e) {
     var mouse = getMouse(e);
     if (selectedCircle != null) { selectedCircle = null; redraw(); return; }
-    if (selectedLine != null && !addLineMode) { selectedLine = null; redraw(); return; }
+    if (selectedLine != null && !addLineMode) { selectedLine = null; lineEnd = 0; redraw(); return; }
 
     for (var button of buttons) {
         if (button.click(e)) return;
@@ -296,6 +327,16 @@ function doClick(e) {
                 minD = d;
                 selectedLine = line;
                 lineEnd = j;
+            }
+        }
+        if (line.anchors) {
+            for (var j = 0; j < 2; ++j) {
+                var d = dist(line.anchors[j], mouse);
+                if (d < minD) {
+                    minD = d;
+                    selectedLine = line;
+                    lineEnd = j+2;
+                }
             }
         }
     }
@@ -395,18 +436,22 @@ $("canvas").mousemove(function(e) {
     }
     if (selectedLine != null) {
         var selected = selectedLine;
-        var minD = 50;
-        for (var circle of allCircles) {
-            var d = Math.abs(dist(mouse, circle) - circle.r);
-            if (d < minD) {
-                var a = Math.atan2(mouse.y - circle.y, mouse.x - circle.x);
-                if (!circle.hasPoint(a))
-                    continue;
-                minD = d;
-                selected.updatePoint(lineEnd, circle, a);
-                if (addLineMode)
-                    selected.updatePoint((lineEnd+1) % 2, circle, a);	//moving both ends at once looks like a single red dot
+        if (lineEnd < 2) { // moving line end
+            var minD = 50;
+            for (var circle of allCircles) {
+                var d = Math.abs(dist(mouse, circle) - circle.r);
+                if (d < minD) {
+                    var a = Math.atan2(mouse.y - circle.y, mouse.x - circle.x);
+                    if (!circle.hasPoint(a))
+                        continue;
+                    minD = d;
+                    selected.updatePoint(lineEnd, circle, a);
+                    if (addLineMode)
+                        selected.updatePoint((lineEnd+1) % 2, circle, a);	//moving both ends at once looks like a single red dot
+                }
             }
+        } else { // moving curve anchor
+            selected.rel_anchors[lineEnd-2] = {x: mouse.x - selected.points[lineEnd-2].x, y: mouse.y - selected.points[lineEnd-2].y};
         }
         redraw();
         return;
