@@ -137,8 +137,16 @@ function deleteLine(line) {
 
 //a line is always defined be the circles it is connected to and angles in relation to these circles.
 //thus, it will always be connected to the circles' borders.
-function Line(circle1, a1, circle2, a2) {
-    this.draw = function() {
+class Line {
+    constructor(circle1, a1, circle2, a2) {
+        this.points = [{ circle: circle1, a: a1 },
+                     { circle: circle2, a: a2 }];
+        this.selectable = true;
+
+        circle1.lines.push(this); circle2.lines.push(this);
+        this.update();
+    }
+    draw() {
         ctx.strokeStyle = (selectedLine === this) ? "grey" : "black";
         drawLine(this.points[0].x, this.points[0].y, this.points[1].x, this.points[1].y);
         if (dirtyRender && this.selectable) {
@@ -150,24 +158,18 @@ function Line(circle1, a1, circle2, a2) {
                 drawRedDot(this.points[1].x, this.points[1].y);
             }
         }
-    };
-    this.update = function() {
+    }
+    update() {
         for (var point of this.points)
             [point.x, point.y] = pointFromAngle(point.circle, point.circle.r, point.a);
-    };
-    this.updatePoint = function(end, circle, a) {
+    }
+    updatePoint(end, circle, a) {
         var point = this.points[end];
         point.circle.lines.removeItem(this);
         point.circle = circle; circle.lines.push(this);
         point.a = a;
         this.update();
-    };
-    this.points = [{ circle: circle1, a: a1 },
-                 { circle: circle2, a: a2 }];
-    this.selectable = true;
-
-    circle1.lines.push(this); circle2.lines.push(this);
-    this.update();
+    }
 }
 
 //every circle or arc you can see is of this class.
@@ -177,8 +179,27 @@ function Line(circle1, a1, circle2, a2) {
 //a subtype - which corresponds to the column of the alphabet
 //if the letter is a vowel, then type=5 (when it's a standalone letter) or 6 (when it's connected to a consonant)
 //a list of other circles and lines connected to it, so they can easily updated in a cascading style
-function Circle(owner, type, subtype, d, r, a) {
-    this.draw = function() {
+class Circle {
+    constructor(owner, type, subtype, d, r, a) {
+        this.owner = owner;
+        this.children = [];
+        this.type = type; this.subtype = subtype;
+
+        // currently only word circles lay on main circle; this may change in the future
+        this.isWordCircle = owner == allCircles[0];
+        this.isVowel = this.type === 5 || this.type === 6;
+        this.isConsonant = ! this.isVowel;
+        this.hasGaps = this.type === 1 || this.type === 3;
+
+        this.dots = this.isConsonant ? [null, 0, 2, 3, 0, 0, 0][this.subtype] : 0;
+
+        this.nLines = 0;        //expected number of lines, according to rules
+        this.lines = [];
+        this.selectable = true;
+        this.r = r;
+        this.update(d, a);
+    }
+    draw() {
         ctx.strokeStyle = (selectedCircle === this) ? "grey" : "black";
 
         if (this.isWordCircle) {           //it's a wordCircle so we need to make a gap for B- and T- row letters
@@ -211,9 +232,8 @@ function Circle(owner, type, subtype, d, r, a) {
         }
         if (dirtyRender && this.selectable)
             drawRedDot(this.x, this.y);
-    };
-
-    this.update = function(d, a) {      //recalculates the position, forces other circles/lines connected to it to update too
+    }
+    update(d, a) {      //recalculates the position, forces other circles/lines connected to it to update too
         var oldA = this.a;
         [this.x, this.y] = pointFromAngle(this.owner, d, a);
         this.d = d;
@@ -226,9 +246,8 @@ function Circle(owner, type, subtype, d, r, a) {
         }
         for (var line of this.lines)
             line.update();
-    };
-
-    this.hasPoint = function(a) {
+    }
+    hasPoint(a) {
         // check if point at this angle would be on a visible arc.
         // same basic logic as in draw()
         if (this.isWordCircle) {
@@ -246,24 +265,6 @@ function Circle(owner, type, subtype, d, r, a) {
             return isBetween(this.a + PI - an, this.a + PI + an, a);
         } else return true;
     }
-
-    this.owner = owner;
-    this.children = [];
-    this.type = type; this.subtype = subtype;
-
-    // currently only word circles lay on main circle; this may change in the future
-    this.isWordCircle = owner == allCircles[0];
-    this.isVowel = this.type === 5 || this.type === 6;
-    this.isConsonant = ! this.isVowel;
-    this.hasGaps = this.type === 1 || this.type === 3;
-
-    this.dots = this.isConsonant ? [null, 0, 2, 3, 0, 0, 0][this.subtype] : 0;
-
-    this.nLines = 0;        //expected number of lines, according to rules
-    this.lines = [];
-    this.selectable = true;
-    this.r = r;
-    this.update(d, a);
 }
 
 //selects the circle/line. Checks whether any buttons are pressed.
